@@ -1,0 +1,984 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตำราภาษาผัก ฉบับมาตรฐาน เวอร์ชัน 2.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset และ Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            font-size: 16px;
+        }
+        
+        body {
+            font-family: 'Sarabun', 'TH Sarabun New', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+            padding-top: 60px; /* สำหรับ fixed header */
+            overflow-x: hidden; /* ป้องกัน horizontal scroll */
+            word-wrap: break-word; /* ตัดคำยาวอัตโนมัติ */
+        }
+        
+        /* Header และ Navigation */
+        .header {
+            background-color: #1a365d;
+            color: white;
+            padding: 0.75rem 1rem;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header-text {
+            flex: 1;
+            min-width: 0; /* ป้องกันการล้น */
+        }
+        
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            line-height: 1.3;
+            margin-bottom: 0.1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .header .subtitle {
+            font-size: 0.8rem;
+            opacity: 0.9;
+            line-height: 1.2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        /* Main Container */
+        .container {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.75rem;
+            min-height: calc(100vh - 120px);
+        }
+        
+        /* Sidebar สำหรับ Desktop */
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.25rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-right: 1rem;
+            height: fit-content;
+            position: sticky;
+            top: 75px;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+        }
+        
+        .sidebar h3 {
+            color: #1a365d;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 1.1rem;
+        }
+        
+        .sidebar ul {
+            list-style-type: none;
+        }
+        
+        .sidebar li {
+            margin-bottom: 0.4rem;
+        }
+        
+        .sidebar a {
+            color: #4a5568;
+            text-decoration: none;
+            display: block;
+            padding: 0.35rem 0.5rem;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .sidebar a:hover {
+            background-color: #edf2f7;
+            color: #1a365d;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            min-width: 0; /* ป้องกันการล้น */
+        }
+        
+        .section {
+            margin-bottom: 2.5rem;
+            scroll-margin-top: 70px; /* สำหรับ anchor links */
+        }
+        
+        .section h2 {
+            color: #1a365d;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.25rem;
+            font-size: 1.5rem;
+            line-height: 1.3;
+        }
+        
+        .chapter {
+            margin-bottom: 1.75rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .chapter:last-child {
+            border-bottom: none;
+        }
+        
+        .chapter h3 {
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            font-size: 1.3rem;
+            line-height: 1.4;
+        }
+        
+        .chapter h3:before {
+            content: "บทที่";
+            background-color: #4299e1;
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin-right: 0.8rem;
+            flex-shrink: 0;
+        }
+        
+        .chapter h4 {
+            color: #4a5568;
+            margin: 1rem 0 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .chapter h5 {
+            color: #4a5568;
+            margin: 0.75rem 0 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        /* ตาราง - ปรับให้เลื่อนได้แนวนอนบนมือถือ */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            margin: 1rem 0;
+            -webkit-overflow-scrolling: touch; /* สำหรับ iOS */
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px; /* ตารางขั้นต่ำสำหรับ desktop */
+        }
+        
+        th, td {
+            padding: 0.6rem;
+            text-align: left;
+            border: 1px solid #e2e8f0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+        
+        th {
+            background-color: #edf2f7;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        /* ตัวอย่างโค้ด */
+        .example {
+            background-color: #f7fafc;
+            border-left: 4px solid #4299e1;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+            overflow-x: auto;
+        }
+        
+        .example-code {
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 0.75rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        
+        /* Mobile Navigation */
+        .mobile-nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            margin-left: 0.5rem;
+            flex-shrink: 0;
+        }
+        
+        .mobile-sidebar {
+            display: none;
+            background-color: white;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            width: 100%;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
+            z-index: 999;
+            padding: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .mobile-sidebar.active {
+            display: block;
+        }
+        
+        /* Responsive Styles - MOBILE FIRST */
+        @media (max-width: 768px) {
+            html {
+                font-size: 15px;
+            }
+            
+            .container {
+                flex-direction: column;
+                padding: 0.5rem;
+            }
+            
+            .sidebar {
+                display: none;
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 1rem;
+                position: static;
+                max-height: none;
+            }
+            
+            .mobile-nav-toggle {
+                display: block;
+            }
+            
+            .main-content {
+                padding: 1.25rem;
+                width: 100%;
+            }
+            
+            .section h2 {
+                font-size: 1.4rem;
+            }
+            
+            .chapter h3 {
+                font-size: 1.2rem;
+                flex-wrap: wrap;
+            }
+            
+            .chapter h3:before {
+                margin-bottom: 0.25rem;
+            }
+            
+            table {
+                min-width: 100%; /* บนมือถือให้ตารางกว้างเต็ม container */
+            }
+            
+            th, td {
+                padding: 0.5rem;
+                font-size: 0.9rem;
+            }
+            
+            /* ปรับ padding และ margins สำหรับเนื้อหาบนมือถือ */
+            p, ul, ol {
+                margin-bottom: 0.75rem;
+            }
+            
+            li {
+                margin-bottom: 0.25rem;
+            }
+            
+            .example {
+                padding: 0.75rem;
+            }
+            
+            .example-code {
+                padding: 0.6rem;
+                font-size: 0.85rem;
+            }
+            
+            /* ปรับ header สำหรับมือถือ */
+            .header h1 {
+                font-size: 1.1rem;
+            }
+            
+            .header .subtitle {
+                font-size: 0.75rem;
+            }
+        }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .sidebar {
+                width: 220px;
+                padding: 1rem;
+            }
+            
+            .main-content {
+                padding: 1.5rem;
+            }
+            
+            th, td {
+                padding: 0.5rem;
+            }
+        }
+        
+        /* สำหรับจอขนาดเล็กมาก (iPhone SE เป็นต้น) */
+        @media (max-width: 375px) {
+            html {
+                font-size: 14px;
+            }
+            
+            .header h1 {
+                font-size: 1rem;
+            }
+            
+            .header .subtitle {
+                font-size: 0.7rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .section h2 {
+                font-size: 1.3rem;
+            }
+            
+            .chapter h3 {
+                font-size: 1.1rem;
+            }
+            
+            th, td {
+                padding: 0.4rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        /* Footer */
+        .footer {
+            background-color: #1a365d;
+            color: white;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        /* Utility Classes */
+        .note {
+            background-color: #fffaf0;
+            border-left: 4px solid #dd6b20;
+            padding: 0.75rem;
+            margin: 0.75rem 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.95rem;
+        }
+        
+        .note strong {
+            color: #c05621;
+        }
+        
+        .highlight {
+            background-color: #fffbeb;
+            border: 1px solid #fbd38d;
+            padding: 0.15rem 0.3rem;
+            border-radius: 3px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .exercise {
+            background-color: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+        }
+        
+        .exercise h4 {
+            color: #276749;
+            margin-bottom: 0.75rem;
+            font-size: 1.1rem;
+        }
+        
+        .answer {
+            background-color: #ebf8ff;
+            border: 1px solid #90cdf4;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 0.75rem;
+            display: none;
+            overflow-x: auto;
+        }
+        
+        .show-answer-btn {
+            background-color: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 0.75rem;
+            font-family: 'Sarabun', sans-serif;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        
+        .show-answer-btn:hover {
+            background-color: #3182ce;
+        }
+        
+        /* ปรับปรุง typography สำหรับเนื้อหาทั่วไป */
+        p {
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+        
+        /* ปรับปรุงการแสดงผลของ inline code */
+        code:not(.example-code) {
+            background-color: #f1f5f9;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 0.9em;
+            color: #2d3748;
+        }
+        
+        /* ปรับปรุงการแสดงผลของ blockquote */
+        blockquote {
+            border-left: 4px solid #cbd5e0;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #4a5568;
+            font-style: italic;
+        }
+        
+        /* ปรับปรุงการแสดงผลของรูปภาพ (ถ้ามี) */
+        img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1rem auto;
+        }
+        
+        /* ปรับปรุงการแสดงผลของ horizontal rule */
+        hr {
+            border: none;
+            border-top: 1px solid #e2e8f0;
+            margin: 1.5rem 0;
+        }
+        
+        /* ปรับปรุงการแสดงผลของ keyboard keys */
+        kbd {
+            background-color: #f7fafc;
+            border: 1px solid #cbd5e0;
+            border-radius: 3px;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.1);
+            color: #4a5568;
+            display: inline-block;
+            font-family: 'SFMono-Regular', Consolas, monospace;
+            font-size: 0.85em;
+            line-height: 1;
+            padding: 0.2rem 0.4rem;
+            white-space: nowrap;
+        }
+        
+        /* ปรับปรุงการแสดงผลของ scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* ปรับปรุงการแสดงผลบนเบราว์เซอร์ Firefox */
+        @supports (scrollbar-width: thin) {
+            * {
+                scrollbar-width: thin;
+                scrollbar-color: #c1c1c1 #f1f1f1;
+            }
+        }
+        
+        /* สไตล์สำหรับเนื้อหาเฉพาะของตำรา */
+        .pronunciation-rule {
+            background-color: #f7fafc;
+            border-left: 4px solid #38a169;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .rule-title {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .rule-example {
+            margin-top: 0.5rem;
+            padding-left: 1rem;
+            border-left: 2px solid #cbd5e0;
+        }
+        
+        .ipa {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f5f9;
+            padding: 0.1rem 0.3rem;
+            border-radius: 3px;
+            font-style: italic;
+        }
+        
+        .consonant-group {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .consonant-group-title {
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .consonant-group-title:before {
+            content: "";
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: #4299e1;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-text">
+                <h1>ตำราภาษาผัก ฉบับมาตรฐาน</h1>
+                <div class="subtitle">เวอร์ชัน 2.0 – สำหรับการสื่อสารและร่างกฎหมาย</div>
+            </div>
+            <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="เปิดเมนู">☰</button>
+        </div>
+    </header>
+    
+    <!-- Mobile Sidebar (สำหรับมือถือ) -->
+    <nav class="mobile-sidebar" id="mobileSidebar">
+        <h3>สารบัญ</h3>
+        <ul id="mobileNavList">
+            <!-- จะเติมลิงก์ด้วย JavaScript -->
+        </ul>
+    </nav>
+    
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Desktop Sidebar -->
+        <nav class="sidebar">
+            <h3>สารบัญ</h3>
+            <ul id="desktopNavList">
+                <!-- จะเติมลิงก์ด้วย JavaScript -->
+            </ul>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- ส่วนที่ 1: ระบบพื้นฐาน -->
+            <section id="part1" class="section">
+                <h2>ส่วนที่ 1: ระบบพื้นฐาน</h2>
+                
+                <!-- บทที่ 1 – ระบบเสียงและการออกเสียง -->
+                <div class="chapter" id="chapter1">
+                    <h3>1 – ระบบเสียงและการออกเสียง</h3>
+                    
+                    <!-- 1.1 สระ (Vowels) -->
+                    <h4>1.1 สระ (Vowels)</h4>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>สระ</th>
+                                    <th>การออกเสียง</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>อะ</td>
+                                    <td>a (สั้น)</td>
+                                </tr>
+                                <tr>
+                                    <td>อา</td>
+                                    <td>ā (ยาว)</td>
+                                </tr>
+                                <tr>
+                                    <td>อิ</td>
+                                    <td>i (สั้น)</td>
+                                </tr>
+                                <tr>
+                                    <td>อี</td>
+                                    <td>ī (ยาว)</td>
+                                </tr>
+                                <tr>
+                                    <td>อุ</td>
+                                    <td>u (สั้น)</td>
+                                </tr>
+                                <tr>
+                                    <td>อู</td>
+                                    <td>ū (ยาว)</td>
+                                </tr>
+                                <tr>
+                                    <td>เอ</td>
+                                    <td>e</td>
+                                </tr>
+                                <tr>
+                                    <td>โอ</td>
+                                    <td>o</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 1.2 พยัญชนะ (Consonants) -->
+                    <h4>1.2 พยัญชนะ (Consonants)</h4>
+                    <p><strong>กลุ่มเสียงหลัก:</strong></p>
+                    
+                    <div class="consonant-group">
+                        <div class="consonant-group-title">​ก ข ค ฆ ง (Guttural / กัณฐชะ - เกิดที่คอ)</div>
+                        <div class="example-code">k kh g gh ṅ</div>
+                    </div>
+                    
+                    <div class="consonant-group">
+                        <div class="consonant-group-title">จ ฉ ช ฌ ญ (Palatal / ตาลุชะ - เกิดที่เพดาน)</div>
+                        <div class="example-code">c ch j jh ñ</div>
+                    </div>
+                    
+                    <div class="consonant-group">
+                        <div class="consonant-group-title">ฎ ฏ ฐ ฑ ฒ ณ (Retroflex / มูรธชะ - เกิดที่ปุ่มเหงือก/ม้วนลิ้น)</div>
+                        <div class="example-code">ṭ ṭh ḍ ḍh ṇ</div>
+                    </div>
+                    
+                    <div class="consonant-group">
+                        <div class="consonant-group-title">ต ถ ท ธ น (Dental / ทันตชะ - เกิดที่ฟัน)</div>
+                        <div class="example-code">t th d dh n</div>
+                    </div>
+                    
+                    <div class="consonant-group">
+                        <div class="consonant-group-title">ป ผ พ ภ ม (Labial / โอฏฐชะ - เกิดที่ริมฝีปาก)</div>
+                        <div class="example-code">p ph b bh m</div>
+                    </div>
+                    
+                    <p><strong>กลุ่มอื่นๆ:</strong></p>
+                    <div class="example-code">ย ร ล ว ส ห ฬ อํ<br>y r l v s h ḷ ṃ</div>
+                    
+                    <!-- 1.3 กฎการออกเสียงพิเศษ -->
+                    <h4>1.3 กฎการออกเสียงพิเศษ</h4>
+                    
+                    <div class="pronunciation-rule">
+                        <div class="rule-title">1. <strong>กฎ อิย → อี</strong></div>
+                        <ul>
+                            <li><strong>เขียน:</strong> อิย (iy)</li>
+                            <li><strong>อ่าน:</strong> อี (ī)</li>
+                            <li><strong>ตัวอย่าง:</strong> หิยโย (hiyyo) → อ่าน "หีโย" (แปลว่า "เมื่อวาน")</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="pronunciation-rule">
+                        <div class="rule-title">2. <strong>กฎ อุว → โอ</strong></div>
+                        <ul>
+                            <li><strong>เขียน:</strong> อุว (uv)</li>
+                            <li><strong>อ่าน:</strong> โอ (o)</li>
+                            <li><strong>ตัวอย่าง:</strong> ยุว (yuva) → อ่าน "โย"</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="pronunciation-rule">
+                        <div class="rule-title">3. <strong>หลักการทั่วไป</strong></div>
+                        <ul>
+                            <li>ออกเสียงทุกพยางค์ที่มีสระและตัวสะกด</li>
+                            <li>ใช้ระบบเสียงเหมือนภาษาไทย</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- บทที่ 2 – คำกริยาและโครงสร้างประโยค -->
+                <div class="chapter" id="chapter2">
+                    <h3>2 – คำกริยาและโครงสร้างประโยค</h3>
+                    <div class="note">
+                        <strong>หมายเหตุ:</strong> เนื้อหาบทที่ 2 กำลังเตรียม...
+                    </div>
+                </div>
+                
+                <!-- บทที่ 3 – ระบบกาลเวลา -->
+                <div class="chapter" id="chapter3">
+                    <h3>3 – ระบบกาลเวลา</h3>
+                    <div class="note">
+                        <strong>หมายเหตุ:</strong> เนื้อหาบทที่ 3 กำลังเตรียม...
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ส่วนที่ 2: โครงสร้างประโยคขั้นสูง -->
+            <section id="part2" class="section">
+                <h2>ส่วนที่ 2: โครงสร้างประโยคขั้นสูง</h2>
+                <div class="note">
+                    <strong>หมายเหตุ:</strong> เนื้อหาส่วนที่ 2 กำลังเตรียม...
+                </div>
+            </section>
+            
+            <!-- ส่วนที่ 3: คำศัพท์เฉพาะทาง -->
+            <section id="part3" class="section">
+                <h2>ส่วนที่ 3: คำศัพท์เฉพาะทาง</h2>
+                <div class="note">
+                    <strong>หมายเหตุ:</strong> เนื้อหาส่วนที่ 3 กำลังเตรียม...
+                </div>
+            </section>
+            
+            <!-- ส่วนที่ 4: การประยุกต์ใช้ -->
+            <section id="part4" class="section">
+                <h2>ส่วนที่ 4: การประยุกต์ใช้</h2>
+                <div class="note">
+                    <strong>หมายเหตุ:</strong> เนื้อหาส่วนที่ 4 กำลังเตรียม...
+                </div>
+            </section>
+            
+            <!-- ภาคผนวก: พจนานุกรมคำศัพท์ -->
+            <section id="appendix" class="section">
+                <h2>ภาคผนวก: พจนานุกรมคำศัพท์</h2>
+                <div class="note">
+                    <strong>หมายเหตุ:</strong> เนื้อหาภาคผนวกกำลังเตรียม...
+                </div>
+            </section>
+            
+            <!-- แบบฝึกหัดท้ายตำรา -->
+            <section id="exercises" class="section">
+                <h2>แบบฝึกหัดท้ายตำรา</h2>
+                <div class="note">
+                    <strong>หมายเหตุ:</strong> เนื้อหาแบบฝึกหัดกำลังเตรียม...
+                </div>
+            </section>
+            
+            <!-- สรุป: หลักการใช้ภาษาผัก -->
+            <section id="summary" class="section">
+                <h2>สรุป: หลักการใช้ภาษาผัก</h2>
+                <div class="note">
+                    <strong>หมายเหตุ:</strong> เนื้อหาสรุปกำลังเตรียม...
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <p>จัดทำโดย: ผู้จัดทำตำราภาษาผัก</p>
+        <p>เวอร์ชัน: 2.0 (ฉบับมาตรฐาน) • วันที่: พ.ศ. 2568</p>
+    </footer>
+    
+    <script>
+        // Mobile navigation toggle
+        document.getElementById('mobileNavToggle').addEventListener('click', function() {
+            document.getElementById('mobileSidebar').classList.toggle('active');
+            // เปลี่ยนไอคอนเมื่อเปิด/ปิด
+            this.textContent = this.textContent === '☰' ? '✕' : '☰';
+        });
+        
+        // ปิด mobile sidebar เมื่อคลิกที่ลิงก์หรือนอก sidebar
+        document.addEventListener('click', function(event) {
+            const mobileSidebar = document.getElementById('mobileSidebar');
+            const mobileNavToggle = document.getElementById('mobileNavToggle');
+            
+            if (mobileSidebar.classList.contains('active') && 
+                !mobileSidebar.contains(event.target) && 
+                event.target !== mobileNavToggle) {
+                mobileSidebar.classList.remove('active');
+                mobileNavToggle.textContent = '☰';
+            }
+        });
+        
+        // ฟังก์ชันสร้าง navigation links
+        function createNavigation() {
+            const sections = [
+                {id: 'part1', title: 'ส่วนที่ 1: ระบบพื้นฐาน'},
+                {id: 'chapter1', title: 'บทที่ 1 – ระบบเสียงและการออกเสียง'},
+                {id: 'chapter2', title: 'บทที่ 2 – คำกริยาและโครงสร้างประโยค'},
+                {id: 'chapter3', title: 'บทที่ 3 – ระบบกาลเวลา'},
+                {id: 'part2', title: 'ส่วนที่ 2: โครงสร้างประโยคขั้นสูง'},
+                {id: 'chapter4', title: 'บทที่ 4 – ประโยคซับซ้อนและคำเชื่อม'},
+                {id: 'chapter5', title: 'บทที่ 5 – ประโยคเงื่อนไขและเหตุผล'},
+                {id: 'chapter6', title: 'บทที่ 6 – ประโยคคำถาม'},
+                {id: 'part3', title: 'ส่วนที่ 3: คำศัพท์เฉพาะทาง'},
+                {id: 'chapter7', title: 'บทที่ 7 – ระบบตัวเลขและลำดับ'},
+                {id: 'chapter8', title: 'บทที่ 8 – ระบบเงินตรา'},
+                {id: 'chapter9', title: 'บทที่ 9 – คำศัพท์ทางกฎหมาย'},
+                {id: 'part4', title: 'ส่วนที่ 4: การประยุกต์ใช้'},
+                {id: 'chapter10', title: 'บทที่ 10 – ตัวอย่างบทกฎหมาย'},
+                {id: 'chapter11', title: 'บทที่ 11 – บทสนทนาในชีวิตจริง'},
+                {id: 'appendix', title: 'ภาคผนวก: พจนานุกรมคำศัพท์'},
+                {id: 'exercises', title: 'แบบฝึกหัดท้ายตำรา'},
+                {id: 'summary', title: 'สรุป: หลักการใช้ภาษาผัก'}
+            ];
+            
+            const desktopNavList = document.getElementById('desktopNavList');
+            const mobileNavList = document.getElementById('mobileNavList');
+            
+            sections.forEach(section => {
+                // สำหรับ desktop
+                const desktopLi = document.createElement('li');
+                const desktopLink = document.createElement('a');
+                desktopLink.href = `#${section.id}`;
+                desktopLink.textContent = section.title;
+                desktopLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById(section.id).scrollIntoView({behavior: 'smooth'});
+                });
+                desktopLi.appendChild(desktopLink);
+                desktopNavList.appendChild(desktopLi);
+                
+                // สำหรับ mobile
+                const mobileLi = document.createElement('li');
+                const mobileLink = document.createElement('a');
+                mobileLink.href = `#${section.id}`;
+                mobileLink.textContent = section.title;
+                mobileLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    document.getElementById(section.id).scrollIntoView({behavior: 'smooth'});
+                    document.getElementById('mobileSidebar').classList.remove('active');
+                    document.getElementById('mobileNavToggle').textContent = '☰';
+                });
+                mobileLi.appendChild(mobileLink);
+                mobileNavList.appendChild(mobileLi);
+            });
+        }
+        
+        // เพิ่ม event listener สำหรับปุ่มแสดงเฉลย (ถ้ามี)
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('show-answer-btn')) {
+                const answerDiv = e.target.nextElementSibling;
+                if (answerDiv && answerDiv.classList.contains('answer')) {
+                    answerDiv.style.display = answerDiv.style.display === 'block' ? 'none' : 'block';
+                    e.target.textContent = answerDiv.style.display === 'block' ? 'ซ่อนเฉลย' : 'แสดงเฉลย';
+                }
+            }
+        });
+        
+        // เริ่มต้นโหลด
+        document.addEventListener('DOMContentLoaded', function() {
+            createNavigation();
+            
+            // Highlight ลิงก์ใน sidebar ตามส่วนที่กำลังดู
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.3
+            };
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const id = entry.target.id;
+                    if (entry.isIntersecting) {
+                        // ลบ active class ออกจากลิงก์ทั้งหมด
+                        document.querySelectorAll('.sidebar a, .mobile-sidebar a').forEach(link => {
+                            link.classList.remove('active');
+                        });
+                        
+                        // เพิ่ม active class ให้ลิงก์ปัจจุบัน
+                        const activeLinks = document.querySelectorAll(`.sidebar a[href="#${id}"], .mobile-sidebar a[href="#${id}"]`);
+                        activeLinks.forEach(link => {
+                            link.classList.add('active');
+                            link.style.backgroundColor = '#edf2f7';
+                            link.style.color = '#1a365d';
+                        });
+                    }
+                });
+            }, observerOptions);
+            
+            // Observe ทุกส่วนในเอกสาร
+            document.querySelectorAll('.section, .chapter').forEach(section => {
+                observer.observe(section);
+            });
+        });
+    </script>
+</body>
+</html>
