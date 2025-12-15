@@ -1,14 +1,21 @@
-﻿name: Daily Buddhist Notification
+name: Daily Buddhist Notification
 
 on:
   schedule:
-    # เวลา 23:00 UTC คือ 06:00 เช้าเวลาไทย
     - cron: '0 23 * * *'
   workflow_dispatch:
 
 jobs:
   notify:
     runs-on: ubuntu-latest
+
+    # --- เพิ่มส่วนนี้เข้าไปครับ ---
+    defaults:
+      run:
+        # เปลี่ยน 'backend' เป็นชื่อโฟลเดอร์ที่คุณเก็บไฟล์ไว้
+        working-directory: ./push 
+    # --------------------------
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -19,6 +26,7 @@ jobs:
           node-version: '18'
 
       - name: Install Dependencies
+        # ระบบจะเข้าไปรันในโฟลเดอร์ที่กำหนดให้อัตโนมัติ
         run: npm install
 
       - name: Run Push Notification Script
@@ -27,5 +35,4 @@ jobs:
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           SUBSCRIPTION_JSON: ${{ secrets.SUBSCRIPTION_JSON }}
         run: node server_push.js
-
 
