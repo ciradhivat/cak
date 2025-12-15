@@ -1,11 +1,9 @@
-name: Daily Buddhist Notification
+﻿name: Daily Buddhist Notification
 
-# ทำงานเมื่อ:
-# 1. schedule: ทุกวันเวลา 06:00 น. (เวลาไทย) -> ต้องตั้งเป็น UTC คือ 23:00 ของวันก่อนหน้า
-# 2. workflow_dispatch: กดปุ่มรันเองได้ (สำหรับการทดสอบ)
 on:
   schedule:
-    - cron: '0 23 * * *' 
+    # เวลา 23:00 UTC คือ 06:00 เช้าเวลาไทย
+    - cron: '0 23 * * *'
   workflow_dispatch:
 
 jobs:
@@ -29,4 +27,5 @@ jobs:
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
           SUBSCRIPTION_JSON: ${{ secrets.SUBSCRIPTION_JSON }}
         run: node server_push.js
+
 
