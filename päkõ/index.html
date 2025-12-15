@@ -2,10 +2,13 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ปฏิทินปักขคณนา</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4E342E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&family=Niramit:wght@500;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -13,203 +16,304 @@
             --text-color: #4E342E;
             --accent-color: #D4AF37;
             --holy-day-color: #C62828;
+            --header-bg: #4E342E;
+            --base-scale: 1; 
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            -webkit-user-select: none; /* ป้องกันการแตะค้างแล้วเลือกข้อความ */
+            -webkit-user-select: none;
             user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
+        html {
+            font-size: calc(16px * var(--base-scale));
+            height: 100%;
+            width: 100%;
+            overflow: hidden; /* ล็อคแม่ */
+            overscroll-behavior: none;
+        }
+
         body {
             font-family: 'Sarabun', sans-serif;
-            background-color: var(--bg-color);
+            background-color: #fff;
             color: var(--text-color);
-            /* ล็อคหน้าจอไม่ให้ Scroll */
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh; /* รองรับ Mobile Browser รุ่นใหม่ */
+            position: fixed; /* ล็อคหน้าจอหลักให้นิ่งสนิท */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: fixed;
-            top: 0;
-            left: 0;
         }
 
-        /* การ์ดหลักตรงกลาง */
         .main-card {
             background-color: #fff;
-            width: 90%;
-            max-width: 450px; /* จำกัดความกว้างให้พอดีตาบน Desktop */
-            /* ใช้ vh และ flex เพื่อจัด layout ภายใน */
-            height: auto;
-            max-height: 90dvh;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border: 2px solid #EFEBE9;
+            width: 100%;
+            height: 100%;
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
         header {
-            background-color: var(--text-color);
+            background-color: var(--header-bg);
             color: #fff;
-            padding: 15px;
-            text-align: center;
-            border-radius: 18px 18px 0 0;
+            /* ลด Padding Header ลง */
+            padding: 10px 15px; 
+            padding-top: max(10px, env(safe-area-inset-top)); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
             position: relative;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            /* กำหนดความสูงขั้นต่ำให้พอดี ไม่ใหญ่เกินไป */
+            min-height: 60px; 
         }
 
         h1 {
             font-family: 'Niramit', serif;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 500;
             margin: 0;
         }
 
-        /* ปุ่มกระดิ่งแจ้งเตือน */
-        .noti-btn {
+        .icon-btn {
             background: none;
             border: none;
             color: #FFD54F;
-            position: absolute;
-            right: 15px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             cursor: pointer;
-            padding: 5px;
+            padding: 8px; /* ลดพื้นที่กดเล็กน้อยเพื่อให้ชิดขอบ */
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+        .menu-btn { left: 10px; bottom: 10px; }
+        .noti-btn { right: 10px; bottom: 10px; }
 
+        /* --- Content Area แบบยืดหยุ่น (Flexbox) --- */
         .content {
-            padding: 20px;
+            /* ลด Padding ด้านข้างให้เหลือพื้นที่ตัวหนังสือมากขึ้น */
+            padding: 10px 15px; 
             text-align: center;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* เนื้อหาอยู่ตรงกลางเสมอ */
-            overflow-y: auto; /* เผื่อเนื้อหาเยอะเกินในจอมือถือเล็กมากๆ */
+            /* ใช้ space-evenly: กระจายพื้นที่ว่างที่มีอยู่อย่างเท่าๆ กัน */
+            /* ถ้าพื้นที่น้อย มันจะบีบหากันเอง ถ้าพื้นที่เยอะ มันจะห่างกันเอง */
+            justify-content: space-evenly; 
+            align-items: center;
+            
+            /* Safety Valve: ถ้ามันล้นจริงๆ (จอเล็ก+ตัวใหญ่มาก) ยอมให้เลื่อนเฉพาะตรงกลาง */
+            /* ดีกว่าข้อความขาดหายไป */
+            overflow-y: auto; 
+            overscroll-behavior: contain;
         }
 
+        /* ปรับ Element ต่างๆ ให้กระชับขึ้น */
         .date-display {
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            color: #555;
+            font-size: 1.1rem; 
+            /* ตัด Margin ออก เพราะใช้ space-evenly ของแม่คุมแล้ว */
+            margin: 0; 
+            color: #666;
+            width: 100%;
+            flex-shrink: 0; /* ห้ามหด */
         }
 
         .date-display strong {
             color: var(--text-color);
-            font-size: 1.4rem;
+            font-size: 1.6rem;
             display: block;
             margin-top: 5px;
+            line-height: 1.2;
         }
 
         .holy-day-status {
-            background-color: #f5f5f5;
-            border-radius: 15px;
-            padding: 15px;
-            margin: 10px 0;
-            border: 3px solid #ddd;
+            background-color: #fff;
+            border-radius: 20px;
+            /* ลด Padding ในกล่องลง */
+            padding: 20px 10px; 
+            border: 2px solid #eee;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             transition: all 0.3s;
+            
+            /* ยอมให้หดได้นิดหน่อยถ้าที่จวนตัว */
+            flex-shrink: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .holy-day-status.is-holy {
             background-color: #FFFDE7;
             border-color: var(--accent-color);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.25);
         }
 
         .status-icon {
-            font-size: 2.5rem;
+            font-size: 3.5rem;
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 5px; /* ลดระยะห่าง */
+            line-height: 1;
         }
 
         .status-text {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             font-family: 'Niramit', serif;
+            line-height: 1.2;
         }
-
-        .is-holy .status-text {
-            color: var(--holy-day-color);
-        }
+        .is-holy .status-text { color: var(--holy-day-color); }
 
         .moon-phase-display {
-            font-size: 1.6rem;
-            font-weight: bold;
+            font-size: 2rem;
+            font-weight: 700;
             color: var(--text-color);
-            margin: 10px 0;
             font-family: 'Niramit', serif;
+            /* ตัด Margin ออก */
+            margin: 0; 
+            flex-shrink: 0;
         }
 
         .next-event {
             background-color: var(--text-color);
             color: #fff;
-            padding: 10px;
-            border-radius: 10px;
-            margin-top: 20px;
+            padding: 12px 20px; /* ลดขนาดปุ่ม */
+            border-radius: 40px;
             font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(78, 52, 46, 0.2);
+            width: auto;
+            min-width: 250px;
+            flex-shrink: 0;
         }
 
         .next-event span {
             color: #FFD54F;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            margin: 0 3px;
         }
 
         .technical-info {
-            margin-top: 15px;
+            /* ลด Padding และ Margin */
             padding-top: 10px;
-            border-top: 1px dashed #ccc;
+            width: 100%;
             font-size: 0.8rem;
-            color: #888;
+            color: #999;
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
+            gap: 20px;
+            flex-shrink: 0;
         }
-
         .tech-item span {
             display: block;
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: var(--text-color);
             font-weight: bold;
         }
 
-        /* Responsive */
-        @media (min-width: 768px) {
-            .main-card { max-width: 500px; padding: 10px; }
-            h1 { font-size: 1.6rem; }
-            .status-text { font-size: 1.8rem; }
+        /* --- Side Menu --- */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 20;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
         }
-        
-        @media (max-height: 600px) {
-            .main-card { height: 98dvh; }
-            .content { justify-content: flex-start; }
+        .overlay.active { opacity: 1; visibility: visible; }
+        .side-menu {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background-color: #fff; z-index: 30;
+            transition: left 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            display: flex; flex-direction: column;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        }
+        .side-menu.active { left: 0; }
+        .menu-header {
+            background-color: var(--header-bg); color: #fff;
+            padding: 30px 20px 20px; font-family: 'Niramit', serif; font-size: 1.5rem;
+        }
+        .menu-content { padding: 20px; flex-grow: 1; }
+        .setting-item { margin-bottom: 30px; }
+        .setting-label { font-weight: bold; margin-bottom: 15px; display: block; color: #555; }
+        input[type=range] {
+            width: 100%; height: 8px; background: #ddd; border-radius: 5px;
+            outline: none; -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%;
+            background: var(--text-color); cursor: pointer; border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .scale-labels { display: flex; justify-content: space-between; margin-top: 10px; color: #999; font-size: 0.9rem; }
+        .close-menu-btn {
+            margin-top: auto; padding: 15px; background: #f5f5f5; border: none;
+            width: 100%; font-size: 1rem; color: #666; cursor: pointer; border-top: 1px solid #eee;
+        }
+
+        /* Desktop */
+        @media (min-width: 600px) {
+            body { 
+                align-items: center; justify-content: center; 
+                background-color: var(--bg-color);
+            }
+            .main-card {
+                width: 420px; height: auto; min-height: 650px; max-height: 90vh;
+                border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+                overflow: hidden;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="overlay" id="overlay"></div>
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">การตั้งค่า</div>
+        <div class="menu-content">
+            <div class="setting-item">
+                <label class="setting-label">ขนาดตัวอักษร</label>
+                <!-- ปรับ Range ให้กว้างขึ้นเล็กน้อย -->
+                <input type="range" id="fontSizeSlider" min="0.8" max="1.5" step="0.1" value="1">
+                <div class="scale-labels">
+                    <span>เล็ก</span>
+                    <span>ปกติ</span>
+                    <span>ใหญ่มาก</span>
+                </div>
+            </div>
+        </div>
+        <button class="close-menu-btn" id="closeMenuBtn">ปิดเมนู</button>
+    </div>
+
     <div class="main-card">
         <header>
+            <button id="menuBtn" class="icon-btn menu-btn" aria-label="เมนู">
+                <!-- Hamburger Icon -->
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            </button>
             <h1>ปฏิทินปักขคณนา</h1>
-            <button id="notifyBtn" class="noti-btn">🔔</button>
+            <button id="notifyBtn" class="icon-btn noti-btn" aria-label="แจ้งเตือน">🔔</button>
         </header>
+
         <div class="content">
             <div class="date-display"><span id="thaiDayOfWeek">...</span><strong id="thaiFullDate">...</strong></div>
+            
             <div id="holyDayBox" class="holy-day-status">
                 <span class="status-icon" id="statusIcon">🍃</span>
                 <div class="status-text" id="holyDayText">...</div>
             </div>
+            
             <div class="moon-phase-display" id="thaiMoonPhase">...</div>
+            
             <div class="next-event">วันพระถัดไปอีก <span id="nextHolyCount">...</span> วัน<br><small id="nextHolyDate" style="opacity: 0.8;">(...)</small></div>
+            
             <div class="technical-info">
                 <div class="tech-item">หมุดดิถี <span id="dithiNumber">-</span></div>
                 <div class="tech-item">ลำดับวัน <span id="totalDays">-</span></div>
@@ -217,40 +321,29 @@
         </div>
     </div>
 
-    <!-- เรียกใช้ Engine ตัวเดิม -->
     <script src="pakkhakhana.js"></script>
 
     <script>
-        // ตั้งค่าตัวแปรเริ่มต้น
-        const startDate = new Date(1736, 0, 28); // 28 ม.ค. 1736
-
+        const startDate = new Date(1736, 0, 28);
         function toThaiNumerals(num) {
             return num.toString().replace(/[0-9]/g, w => ['๐','๑','๒','๓','๔','๕','๖','๗','๘','๙'][+w]);
         }
-
         function render() {
             const now = new Date();
             const thaiOffset = 7 * 60 * 60 * 1000;
             const thaiNow = new Date(now.getTime() + thaiOffset);
-            
-            // ตัดรอบวันใหม่ตอน 6 โมงเช้า
             if (thaiNow.getUTCHours() < 6) thaiNow.setUTCDate(thaiNow.getUTCDate() - 1);
             thaiNow.setUTCHours(0, 0, 0, 0);
 
             const timeDiff = thaiNow.getTime() - startDate.getTime();
             const daysPassed = Math.floor(timeDiff / (1000 * 3600 * 24));
 
-            // --- เรียกใช้ Engine (ตามที่ระบุว่ามีอยู่แล้ว) ---
-            if (typeof PakkhakhanaEngine === 'undefined') {
-                console.error("ไม่พบ PakkhakhanaEngine กรุณาตรวจสอบไฟล์ pakkhakhana.js");
-                return;
-            }
+            if (typeof PakkhakhanaEngine === 'undefined') return;
 
             const engine = new PakkhakhanaEngine();
             engine.fastForward(daysPassed);
             const status = engine.getCurrentStatus();
 
-            // จำลองหาอนาคต
             const simEngine = engine.clone();
             let nextCount = 0;
             while (true) {
@@ -258,12 +351,11 @@
                 simEngine.nextStep();
                 const s = simEngine.getCurrentStatus();
                 if (s.isWanPhra) break;
-                if (nextCount > 60) break; // กัน Loop ไม่รู้จบ
+                if (nextCount > 60) break;
             }
             const nextHolyDateObj = new Date(thaiNow);
             nextHolyDateObj.setDate(thaiNow.getDate() + nextCount);
 
-            // --- การแสดงผล (UI Update) ---
             const daysTH = ['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'];
             const monthsTH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
             
@@ -292,25 +384,45 @@
             document.getElementById('totalDays').textContent = daysPassed.toLocaleString();
         }
 
-        // --- PWA Registration ---
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => {
-                        console.log('SW Registered', reg);
-                        // เรียกฟังก์ชันสำหรับ Push หากต้องการ
-                    })
-                    .catch(err => console.log('SW Failed', err));
-            });
+        const menuBtn = document.getElementById('menuBtn');
+        const closeMenuBtn = document.getElementById('closeMenuBtn');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const root = document.documentElement;
+
+        function toggleMenu() {
+            const isActive = sideMenu.classList.contains('active');
+            if (isActive) {
+                sideMenu.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                sideMenu.classList.add('active');
+                overlay.classList.add('active');
+            }
+        }
+        menuBtn.addEventListener('click', toggleMenu);
+        closeMenuBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
+
+        fontSizeSlider.addEventListener('input', (e) => {
+            const scale = e.target.value;
+            root.style.setProperty('--base-scale', scale);
+            localStorage.setItem('pakkhakhana_font_scale', scale);
+        });
+
+        const savedScale = localStorage.getItem('pakkhakhana_font_scale');
+        if (savedScale) {
+            root.style.setProperty('--base-scale', savedScale);
+            fontSizeSlider.value = savedScale;
         }
 
-        // ขออนุญาตแจ้งเตือนเมื่อกดปุ่ม
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js'));
+        }
         document.getElementById('notifyBtn').addEventListener('click', () => {
             Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    alert('เปิดการแจ้งเตือนแล้ว');
-                    // ตรงนี้ต้องมี logic ส่ง subscription ไป server
-                }
+                if (permission === 'granted') alert('เปิดการแจ้งเตือนแล้ว');
             });
         });
 
