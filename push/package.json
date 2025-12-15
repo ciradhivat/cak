@@ -1,0 +1,13 @@
+{
+  "name": "pakkhakhana-push-server",
+  "version": "1.0.0",
+  "description": "Script for sending push notifications via GitHub Actions",
+  "main": "server_push.js",
+  "scripts": {
+    "start": "node server_push.js"
+  },
+  "dependencies": {
+    "web-push": "^3.6.0"
+  }
+}
+
