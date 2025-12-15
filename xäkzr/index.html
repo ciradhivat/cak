@@ -1,0 +1,267 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4834d4">
+    <title>Pali Blitz Ultimate</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Styles --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            margin: 0; padding: 0;
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f2f5;
+            height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden; user-select: none;
+        }
+        :root { --primary: #4834d4; --success: #20bf6b; --danger: #eb4d4b; --text: #2d3436; --gold: #f1c40f; }
+        
+        /* Layout */
+        .header { height: 60px; background: white; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); flex-shrink: 0; }
+        .stats { font-size: 1.2rem; font-weight: bold; color: var(--text); display: flex; align-items: center; gap: 5px; }
+        .timer-track { width: 100%; height: 8px; background: #ddd; flex-shrink: 0; }
+        .timer-fill { height: 100%; background: var(--primary); width: 100%; transition: width 0.1s linear; }
+        .game-container { flex-grow: 1; display: flex; flex-direction: column; padding: 10px; max-width: 600px; margin: 0 auto; width: 100%; justify-content: flex-start; }
+        
+        /* Card & Buttons */
+        .question-card { background: white; border-radius: 15px; margin: 10px 0 20px 0; display: flex; justify-content: center; align-items: center; min-height: 150px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 3px solid transparent; transition: all 0.2s; cursor: pointer; }
+        .question-text { font-size: 4rem; font-weight: bold; color: var(--text); }
+        .choices-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex-grow: 1; max-height: 400px; }
+        .btn-choice { background: white; border: 2px solid #e1e1e1; border-radius: 12px; font-size: 1.8rem; font-family: "Times New Roman", serif; color: var(--text); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: transform 0.1s; touch-action: manipulation; box-shadow: 0 4px 0 #ccc; position: relative; overflow: hidden; }
+        .btn-choice:active { transform: translateY(4px); box-shadow: none; }
+        .btn-choice.correct { background: var(--success); color: white; border-color: var(--success); box-shadow: 0 4px 0 #159f56; }
+        .btn-choice.wrong { background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 4px 0 #c0392b; }
+        
+        /* Overlays */
+        .overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.98); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .hidden { display: none !important; }
+        .btn-start { background: var(--primary); color: white; font-size: 1.5rem; padding: 15px 50px; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; box-shadow: 0 5px 15px rgba(72, 52, 212, 0.4); margin-top: 20px; transition: transform 0.1s; }
+        .btn-start:active { transform: scale(0.95); }
+        
+        /* Reminder Button */
+        .btn-reminder { margin-top: 15px; background: transparent; border: 2px solid #ddd; color: #666; padding: 8px 20px; border-radius: 30px; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+        .btn-reminder:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* High Score Badge */
+        .highscore-badge { background: var(--gold); color: white; padding: 5px 15px; border-radius: 20px; font-weight: bold; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        /* Animation */
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+        .shake { animation: shake 0.3s; }
+        
+        #install-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #2d3436; color: white; padding: 10px 20px; border-radius: 30px; display: none; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.2); font-size: 0.9rem; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen" class="overlay">
+        <div class="highscore-badge">🏆 สถิติสูงสุด: <span id="ui-highscore-start">0</span></div>
+        <h1 style="color:var(--primary); font-size: 3rem; margin-bottom: 0;">Pali Blitz</h1>
+        <p style="color:#666; margin-top: 5px;">เกมจับคู่ศัพท์ ความเร็วสูง</p>
+        
+        <button id="btn-play" class="btn-start">เริ่มเกม</button>
+        
+        <button class="btn-reminder" onclick="setReminder()">
+            ⏰ ตั้งเวลาเตือนให้เล่นทุกวัน
+        </button>
+        
+        <div style="margin-top:20px; font-size:0.8rem; color:#999;">Sound Enabled 🔊</div>
+    </div>
+
+    <div id="end-screen" class="overlay hidden">
+        <h1 style="color:var(--danger);">จบเกม!</h1>
+        <p>คะแนนของคุณ</p>
+        <h2 id="final-score" style="font-size: 4rem; margin: 0; color: var(--text);">0</h2>
+        <div id="new-record-msg" style="color:var(--gold); font-weight:bold; display:none; margin-bottom:10px;">✨ ทำลายสถิติใหม่! ✨</div>
+        <button id="btn-restart" class="btn-start">เล่นใหม่</button>
+    </div>
+
+    <div class="header">
+        <div class="stats lives">❤️ <span id="ui-lives">3</span></div>
+        <div class="stats score">⭐️ <span id="ui-score">0</span></div>
+    </div>
+    <div class="timer-track"><div id="ui-timer" class="timer-fill"></div></div>
+    <div class="game-container">
+        <div id="card-box" class="question-card"><span id="ui-question" class="question-text">?</span></div>
+        <div id="ui-choices" class="choices-grid"></div>
+    </div>
+    
+    <div id="install-prompt">📲 ติดตั้งลงเครื่อง</div>
+
+<script>
+    // --- 0. DATA ---
+    const data = [["ำ","å"],["า","ā"],["ะ","a"],["ี","ī"],["ิ","i"],["ู","ū"],["ุ","u"],["เ","e̤"],["แ","ē̤"],["โ","o̤"],["ไ","ī̤"],["ใ","i̤"],["ั","ä"],["็","̂"],["่","́"],["้","̋"],["๊","̌"],["๋","̽"],["ึ","ü"],["ื","ǖ"],["์","̃"],["ๆ","ๆ"],["กร","kr"],["กล","kl"],["กว","kv"],["ขร","khr"],["ขล","khl"],["ขว","khv"],["คร","gr"],["คล","gl"],["คว","gv"],["งง","ɲɲ"],["จร","cr"],["จล","cl"],["ฉร","chr"],["ตร","tr"],["ตล","tl"],["ถร","thr"],["ทร","dr"],["นน","nn"],["ปร","pr"],["ปล","pl"],["ผล","phl"],["พร","br"],["พล","bl"],["ก","k"],["ข","kh"],["ค","ɡ"],["ฃ","k̥h"],["ฅ","g̥"],["ฆ","gh"],["ง","ɲ"],["จ","c"],["ฉ","ch"],["ช","j"],["ฌ","jh"],["ญ","ɳ"],["ฏ","ṭ"],["ฐ","ṭh"],["ฑ","ḍ"],["ฒ","ḍh"],["ณ","ṇ"],["ฎ","d̥"],["ต","t"],["ถ","th"],["ท","d"],["ธ","dh"],["น","n"],["ป","p"],["ผ","ph"],["พ","b"],["ภ","bh"],["ม","m"],["ย","y"],["ร","r"],["ล","l"],["ว","v"],["ส","s"],["ห","h"],["ฬ","ḷ"],["อ","x"],["ํ","ṃ"],["ฯ","ฯ"],["ศ","z̥"],["ษ","z"],["ฮ","xh"],["บ","p̥"],["ฟ","b̥"],["ฝ","p̥h"],["ฤ","t̥h"],["ฦ","b̥h"],["ด","t̥"],["ซ","j̥"]];
+
+    // --- 1. REMINDER SYSTEM (Google Calendar Trick) ---
+    function setReminder() {
+        const title = "ฝึกศัพท์บาลี Pali Blitz";
+        const details = "ได้เวลาทำลายสถิติแล้ว! กดลิงก์เพื่อเล่นเกม: " + window.location.href;
+        // สร้าง Link ปฏิทินแบบ Recurring Event (เตือนทุกวัน)
+        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&details=${encodeURIComponent(details)}&recur=RRULE:FREQ=DAILY`;
+        window.open(url, '_blank');
+    }
+
+    // --- 2. HIGH SCORE SYSTEM (LocalStorage) ---
+    function getHighScore() {
+        return localStorage.getItem('paliBlitzHighScore') || 0;
+    }
+    function saveHighScore(score) {
+        const current = getHighScore();
+        if (score > current) {
+            localStorage.setItem('paliBlitzHighScore', score);
+            return true; // New Record
+        }
+        return false;
+    }
+
+    // --- 3. SOUND ENGINE ---
+    const Sound={ctx:null,init:function(){if(!this.ctx){this.ctx=new(window.AudioContext||window.webkitAudioContext)();}},playTone:function(freq,type,duration,delay=0){if(!this.ctx)return;const osc=this.ctx.createOscillator();const gain=this.ctx.createGain();osc.type=type;osc.frequency.value=freq;osc.connect(gain);gain.connect(this.ctx.destination);const now=this.ctx.currentTime+delay;gain.gain.setValueAtTime(0.1,now);gain.gain.exponentialRampToValueAtTime(0.001,now+duration);osc.start(now);osc.stop(now+duration);},dingDong:function(){this.init();this.playTone(659.25,'sine',0.8,0);this.playTone(523.25,'sine',1.0,0.15);},error:function(){this.init();this.playTone(150,'sawtooth',0.4,0);this.playTone(100,'sawtooth',0.4,0.1);},finish:function(){this.init();[523.25,659.25,783.99,1046.50].forEach((f,i)=>this.playTone(f,'triangle',0.3,i*0.1));}};
+
+    // --- 4. GAME ENGINE ---
+    const Game={
+        score:0,lives:3,timer:100,timerID:null,isPlaying:false,currentPair:null,
+        
+        init:function(){
+            Sound.init();
+            this.score=0;this.lives=3;this.timer=100;this.isPlaying=true;
+            
+            // Update UI
+            document.getElementById('ui-highscore-start').innerText = getHighScore();
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('new-record-msg').style.display = 'none';
+            
+            this.updateStats();
+            this.nextRound();
+            this.startTimer();
+        },
+        
+        nextRound:function(){
+            if(!this.isPlaying)return;
+            const randIdx=Math.floor(Math.random()*data.length);
+            this.currentPair=data[randIdx];
+            const[q,a]=this.currentPair;
+            document.getElementById('ui-question').innerText=q;
+            
+            let choices=[a];
+            while(choices.length<4){
+                const r=data[Math.floor(Math.random()*data.length)][1];
+                if(!choices.includes(r))choices.push(r);
+            }
+            choices.sort(()=>Math.random()-0.5);
+            
+            const grid=document.getElementById('ui-choices');
+            grid.innerHTML='';
+            choices.forEach(c=>{
+                const btn=document.createElement('div');
+                btn.className='btn-choice';
+                btn.innerText=c;
+                const h=(e)=>{e.preventDefault();this.checkAnswer(c,btn);};
+                btn.addEventListener('touchstart',h,{passive:false});
+                btn.addEventListener('click',h);
+                grid.appendChild(btn);
+            });
+        },
+        
+        checkAnswer:function(ans,btn){
+            if(!this.isPlaying||btn.classList.contains('correct')||btn.classList.contains('wrong'))return;
+            if(ans===this.currentPair[1]){
+                Sound.dingDong();
+                this.score+=10;
+                this.timer=Math.min(100,this.timer+10);
+                btn.classList.add('correct');
+                setTimeout(()=>this.nextRound(),200);
+            }else{
+                Sound.error();
+                this.lives--;
+                this.timer-=10;
+                btn.classList.add('wrong');
+                this.shakeScreen();
+                if(this.lives<=0)this.gameOver();
+                else setTimeout(()=>this.nextRound(),600);
+            }
+            this.updateStats();
+        },
+        
+        startTimer:function(){
+            if(this.timerID)clearInterval(this.timerID);
+            this.timerID=setInterval(()=>{
+                if(!this.isPlaying)return;
+                this.timer-=0.2;
+                if(this.timer<=0){
+                    Sound.error();
+                    this.lives--;
+                    this.shakeScreen();
+                    this.timer=100;
+                    this.updateStats();
+                    if(this.lives<=0)this.gameOver();
+                    else this.nextRound();
+                }
+                const bar=document.getElementById('ui-timer');
+                bar.style.width=this.timer+"%";
+                if(this.timer<30)bar.style.backgroundColor="var(--danger)";
+                else bar.style.backgroundColor="var(--primary)";
+            },50);
+        },
+        
+        gameOver:function(){
+            this.isPlaying=false;
+            clearInterval(this.timerID);
+            Sound.finish();
+            
+            // Handle High Score
+            const isNewRecord = saveHighScore(this.score);
+            if(isNewRecord) {
+                document.getElementById('new-record-msg').style.display = 'block';
+                document.getElementById('new-record-msg').innerText = "✨ สถิติใหม่! " + this.score + " คะแนน ✨";
+            }
+            document.getElementById('ui-highscore-start').innerText = getHighScore(); // Update for next start
+            
+            document.getElementById('final-score').innerText=this.score;
+            document.getElementById('end-screen').classList.remove('hidden');
+        },
+        
+        updateStats:function(){
+            document.getElementById('ui-score').innerText=this.score;
+            document.getElementById('ui-lives').innerText=this.lives;
+        },
+        
+        shakeScreen:function(){
+            const box=document.getElementById('card-box');
+            box.classList.remove('shake');
+            void box.offsetWidth;
+            box.classList.add('shake');
+        }
+    };
+
+    // --- 5. INSTALL & EVENTS ---
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(e=>console.log(e)); });
+    }
+    
+    // Init High Score on Load
+    document.getElementById('ui-highscore-start').innerText = getHighScore();
+
+    window.addEventListener('DOMContentLoaded',()=>{
+        document.getElementById('btn-play').addEventListener('click',()=>Game.init());
+        document.getElementById('btn-restart').addEventListener('click',()=>Game.init());
+    });
+    
+    // Install Prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault(); deferredPrompt = e;
+        const btn = document.getElementById('install-prompt');
+        btn.style.display = 'block';
+        btn.addEventListener('click', () => {
+            btn.style.display = 'none';
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((r) => { deferredPrompt = null; });
+        });
+    });
+</script>
+</body>
+</html>
