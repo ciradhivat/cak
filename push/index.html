@@ -1,139 +1,328 @@
+﻿
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ปฏิทินปักขคณนา PWA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ปฏิทินปักขคณนา</title>
     <link rel="manifest" href="manifest.json">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <meta name="theme-color" content="#4E342E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&family=Niramit:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap');
-        body { font-family: 'Sarabun', sans-serif; }
+        :root {
+            --bg-color: #FDFBF7;
+            --text-color: #4E342E;
+            --accent-color: #D4AF37;
+            --holy-day-color: #C62828;
+            --header-bg: #4E342E;
+            --base-scale: 1; 
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            font-size: calc(16px * var(--base-scale));
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
+        }
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #fff;
+            color: var(--text-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .main-card {
+            background-color: #fff;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        header {
+            background-color: var(--header-bg);
+            color: #fff;
+            padding: 10px 15px; 
+            padding-top: max(10px, env(safe-area-inset-top)); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            min-height: 60px; 
+        }
+
+        h1 {
+            font-family: 'Niramit', serif;
+            font-size: 1.3rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: #FFD54F;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 8px;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-btn { left: 10px; bottom: 10px; }
+        .noti-btn { right: 10px; bottom: 10px; }
+
+        .content {
+            padding: 10px 15px; 
+            text-align: center;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly; 
+            align-items: center;
+            overflow-y: auto; 
+            overscroll-behavior: contain;
+        }
+
+        .date-display {
+            font-size: 1.1rem; 
+            margin: 0; 
+            color: #666;
+            width: 100%;
+            flex-shrink: 0;
+        }
+
+        .date-display strong {
+            color: var(--text-color);
+            font-size: 1.6rem;
+            display: block;
+            margin-top: 5px;
+            line-height: 1.2;
+        }
+
+        .holy-day-status {
+            background-color: #fff;
+            border-radius: 20px;
+            padding: 20px 10px; 
+            border: 2px solid #eee;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+            flex-shrink: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .holy-day-status.is-holy {
+            background-color: #FFFDE7;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.25);
+        }
+
+        .status-icon {
+            font-size: 3.5rem;
+            display: block;
+            margin-bottom: 5px;
+            line-height: 1;
+        }
+
+        .status-text {
+            font-size: 1.8rem;
+            font-weight: bold;
+            font-family: 'Niramit', serif;
+            line-height: 1.2;
+        }
+        .is-holy .status-text { color: var(--holy-day-color); }
+
+        .moon-phase-display {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            font-family: 'Niramit', serif;
+            margin: 0; 
+            flex-shrink: 0;
+        }
+
+        .next-event {
+            background-color: var(--text-color);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 10px rgba(78, 52, 46, 0.2);
+            width: auto;
+            min-width: 250px;
+            flex-shrink: 0;
+        }
+
+        .next-event span {
+            color: #FFD54F;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin: 0 3px;
+        }
+
+        .technical-info {
+            padding-top: 10px;
+            width: 100%;
+            font-size: 0.8rem;
+            color: #999;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+        .tech-item span {
+            display: block;
+            font-size: 1rem;
+            color: var(--text-color);
+            font-weight: bold;
+        }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 20;
+            opacity: 0; visibility: hidden; transition: all 0.3s;
+        }
+        .overlay.active { opacity: 1; visibility: visible; }
+        .side-menu {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background-color: #fff; z-index: 30;
+            transition: left 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+            display: flex; flex-direction: column;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        }
+        .side-menu.active { left: 0; }
+        .menu-header {
+            background-color: var(--header-bg); color: #fff;
+            padding: 30px 20px 20px; font-family: 'Niramit', serif; font-size: 1.5rem;
+        }
+        .menu-content { padding: 20px; flex-grow: 1; }
+        .setting-item { margin-bottom: 30px; }
+        .setting-label { font-weight: bold; margin-bottom: 15px; display: block; color: #555; }
+        input[type=range] {
+            width: 100%; height: 8px; background: #ddd; border-radius: 5px;
+            outline: none; -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%;
+            background: var(--text-color); cursor: pointer; border: 2px solid #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .scale-labels { display: flex; justify-content: space-between; margin-top: 10px; color: #999; font-size: 0.9rem; }
+        .close-menu-btn {
+            margin-top: auto; padding: 15px; background: #f5f5f5; border: none;
+            width: 100%; font-size: 1rem; color: #666; cursor: pointer; border-top: 1px solid #eee;
+        }
+
+        @media (min-width: 600px) {
+            body { 
+                align-items: center; justify-content: center; 
+                background-color: var(--bg-color);
+            }
+            .main-card {
+                width: 420px; height: auto; min-height: 650px; max-height: 90vh;
+                border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+                overflow: hidden;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
-
-    <div class="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
-        <!-- Header -->
-        <div class="bg-[#4E342E] p-6 text-white text-center relative">
-            <div id="connection-status" class="absolute top-4 right-4 text-xs bg-red-500 px-2 py-1 rounded hidden">
-                <i class="fas fa-unlock"></i> ไม่ปลอดภัย
-            </div>
-            <i class="fas fa-dharmachakra fa-3x mb-3"></i>
-            <h1 class="text-2xl font-bold">ปฏิทินปักขคณนา</h1>
-            <p class="text-yellow-100 text-sm mt-1">แจ้งเตือนวันพระ (PWA)</p>
-        </div>
-
-        <!-- Content -->
-        <div class="p-6 space-y-6">
-
-            <!-- Status Display -->
-            <div id="status-card" class="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
-                <p class="text-gray-500 text-sm">สถานะวันนี้</p>
-                <h2 id="current-date" class="text-lg font-semibold text-gray-800 mb-1">...</h2>
-                <div id="moon-phase" class="text-[#4E342E] font-medium text-lg mt-2">กำลังคำนวณ...</div>
-            </div>
-
-            <!-- Push Notification Settings -->
-            <div class="space-y-4">
-                <h3 class="font-bold text-gray-700 border-b pb-2">ระบบแจ้งเตือน (Push)</h3>
-                
-                <!-- คำแนะนำสำหรับ iOS -->
-                <div id="ios-guide" class="hidden bg-gray-100 p-3 rounded-lg text-sm text-gray-700 mb-2 border border-gray-300">
-                    <p class="font-bold mb-1"><i class="fab fa-apple"></i> สำหรับผู้ใช้ iOS/iPhone:</p>
-                    <p>ระบบแจ้งเตือนจะทำงานเมื่อ:</p>
-                    <ol class="list-decimal list-inside ml-1">
-                        <li>กดปุ่มแชร์ (Share) ด้านล่าง</li>
-                        <li>เลือก <strong>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</strong></li>
-                        <li>เปิดแอปจากไอคอนที่หน้าจอโฮม</li>
-                    </ol>
-                </div>
-
-                <div class="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-2">
-                    <i class="fas fa-info-circle"></i> การแจ้งเตือนจะทำงานแม้ไม่ได้เปิดแอป
-                </div>
-
-                <button id="btn-subscribe" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg transition shadow-md flex items-center justify-center">
-                    <i class="fas fa-bell mr-2"></i> เปิดรับการแจ้งเตือน
-                </button>
-                <p id="error-msg" class="text-red-500 text-xs text-center hidden"></p>
-
-                <!-- Area to show Subscription JSON -->
-                <div id="debug-area" class="hidden animate-fade-in">
-                    <label class="text-xs text-gray-500 font-bold block mb-1">Copy โค้ดนี้ไปใส่ใน Server เพื่อยิงแจ้งเตือน:</label>
-                    <textarea id="sub-json" rows="5" class="w-full text-[10px] p-2 border rounded bg-gray-800 text-green-400 font-mono" readonly></textarea>
-                    <button onclick="copySub()" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs py-2 rounded">
-                        <i class="fas fa-copy"></i> คัดลอกโค้ด
-                    </button>
+<body>
+    <div class="overlay" id="overlay"></div>
+    <div class="side-menu" id="sideMenu">
+        <div class="menu-header">การตั้งค่า</div>
+        <div class="menu-content">
+            <div class="setting-item">
+                <label class="setting-label">ขนาดตัวอักษร</label>
+                <input type="range" id="fontSizeSlider" min="0.8" max="1.5" step="0.1" value="1.5">
+                <div class="scale-labels">
+                    <span>เล็ก</span>
+                    <span>ปกติ</span>
+                    <span>ใหญ่มาก</span>
                 </div>
             </div>
         </div>
-        
-        <div class="bg-gray-50 px-6 py-3 text-center text-xs text-gray-400">
-            Version 1.1 (VAPID Integrated)
+        <button class="close-menu-btn" id="closeMenuBtn">ปิดเมนู</button>
+    </div>
+
+    <div class="main-card">
+        <header>
+            <button id="menuBtn" class="icon-btn menu-btn" aria-label="เมนู">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <h1>ปฏิทินปักขคณนา</h1>
+            <button id="notifyBtn" class="icon-btn noti-btn" aria-label="แจ้งเตือน">🔔</button>
+        </header>
+
+        <div class="content">
+            <div class="date-display">
+                <span id="thaiDayOfWeek">...</span>
+                <strong id="thaiFullDate">...</strong>
+            </div>
+            
+            <div id="holyDayBox" class="holy-day-status">
+                <span class="status-icon" id="statusIcon">🍃</span>
+                <div class="status-text" id="holyDayText">...</div>
+            </div>
+            
+            <div class="moon-phase-display" id="thaiMoonPhase">...</div>
+            
+            <div class="next-event">
+                วันพระถัดไปอีก <span id="nextHolyCount">...</span> วัน<br>
+                <small id="nextHolyDate" style="opacity: 0.8;">(...)</small>
+            </div>
+            
+            <div class="technical-info">
+                <div class="tech-item">หมุดดิถี <span id="dithiNumber">-</span></div>
+                <div class="tech-item">ลำดับวัน <span id="totalDays">-</span></div>
+            </div>
         </div>
     </div>
 
-    <!-- Load Library -->
     <script src="pakkhakhana.js"></script>
-
     <script>
-        // --- KEY ที่คุณให้มา ---
-        const VAPID_PUBLIC_KEY = 'BKUDmY_hkeUeuFfdc77JgVgacjVpkHlESB84o-Y83-MHVXINvvxaJ7bfvGV9MmNgYuRReQ0PdAYlGPMmDIqdwZg';
-
-        // UI References
-        const btnSubscribe = document.getElementById('btn-subscribe');
-        const debugArea = document.getElementById('debug-area');
-        const subJson = document.getElementById('sub-json');
-        const errorMsg = document.getElementById('error-msg');
-        const iosGuide = document.getElementById('ios-guide');
-        const connectionStatus = document.getElementById('connection-status');
-
-        // ตรวจสอบสภาพแวดล้อมเบื้องต้น
-        function checkEnvironment() {
-            // 1. Check HTTPS
-            const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-            const isHttps = location.protocol === 'https:';
-            
-            if (!isLocalhost && !isHttps) {
-                connectionStatus.classList.remove('hidden');
-                showError("ระบบแจ้งเตือนต้องใช้งานผ่าน HTTPS เท่านั้น");
-                btnSubscribe.disabled = true;
-                btnSubscribe.classList.add('opacity-50', 'cursor-not-allowed');
-                return;
-            }
-
-            // 2. Check iOS Standalone Mode
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-
-            if (isIOS && !isStandalone) {
-                iosGuide.classList.remove('hidden');
-            }
+        // ฟังก์ชันแปลงเลขไทย
+        function toThaiNumerals(num) {
+            return num.toString().replace(/[0-9]/g, w => ['๐','๑','๒','๓','๔','๕','๖','๗','๘','๙'][+w]);
         }
 
-        function initCalendar() {
-            const currentDateEl = document.getElementById('current-date');
-            const moonPhaseEl = document.getElementById('moon-phase');
-            
-            const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            currentDateEl.textContent = now.toLocaleDateString('th-TH', options);
-
-            if (typeof PakkhakhanaEngine !== 'undefined') {
-                const engine = new PakkhakhanaEngine();
-                // *หมายเหตุ: ต้อง implement logic การเทียบวันที่จริงกับปฏิทินที่นี่
-                // code นี้แสดงค่าเริ่มต้นของ engine
-                const status = engine.getCurrentStatus();
-                moonPhaseEl.textContent = `แรม ${status.dithi} ค่ำ (สถานะเริ่มต้น)`;
-            }
-        }
-
-        // Helper แปลง Key
+        // ฟังก์ชันแปลง Base64 เป็น Uint8Array (สำหรับ Push Notification)
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
-            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
             const rawData = window.atob(base64);
             const outputArray = new Uint8Array(rawData.length);
             for (let i = 0; i < rawData.length; ++i) {
@@ -142,88 +331,168 @@
             return outputArray;
         }
 
-        async function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                try {
-                    const reg = await navigator.serviceWorker.register('./sw.js');
-                    console.log('SW Registered');
-                    return reg;
-                } catch (error) {
-                    console.error('SW Register failed:', error);
-                    showError("ไม่สามารถติดตั้ง Service Worker ได้");
-                }
+        // Public VAPID Key สำหรับ Push Notification
+        const publicVapidKey = 'BKUDmY_hkeUeuFfdc77JgVgacjVpkHlESB84o-Y83-MHVXINvvxaJ7bfvGV9MmNgYuRReQ0PdAYlGPMmDIqdwZg';
+
+        // กำหนดวันเริ่มต้นของระบบปักขคณนา
+        const startDate = new Date(1736, 0, 28);
+
+        // ฟังก์ชันแสดงผลข้อมูล
+        function render() {
+            const now = new Date();
+            const thaiOffset = 7 * 60 * 60 * 1000;
+            const thaiNow = new Date(now.getTime() + thaiOffset);
+            
+            // ปรับเวลาให้เป็นวันไทย (เริ่มต้นที่ 06:00 น.)
+            if (thaiNow.getUTCHours() < 6) {
+                thaiNow.setUTCDate(thaiNow.getUTCDate() - 1);
             }
+            thaiNow.setUTCHours(0, 0, 0, 0);
+
+            // คำนวณวันที่ผ่านไปจากวันเริ่มต้น
+            const timeDiff = thaiNow.getTime() - startDate.getTime();
+            const daysPassed = Math.floor(timeDiff / (1000 * 3600 * 24));
+
+            // ตรวจสอบว่า Engine พร้อมใช้งาน
+            if (typeof PakkhakhanaEngine === 'undefined') {
+                console.error('PakkhakhanaEngine ไม่ถูกโหลด');
+                return;
+            }
+
+            // สร้าง Engine และคำนวณสถานะปัจจุบัน
+            const engine = new PakkhakhanaEngine();
+            engine.fastForward(daysPassed);
+            const status = engine.getCurrentStatus();
+
+            // คำนวณวันพระถัดไป
+            const simEngine = engine.clone();
+            let nextCount = 0;
+            while (true) {
+                nextCount++;
+                simEngine.nextStep();
+                const s = simEngine.getCurrentStatus();
+                if (s.isWanPhra) break;
+                if (nextCount > 60) break;
+            }
+            
+            const nextHolyDateObj = new Date(thaiNow);
+            nextHolyDateObj.setDate(thaiNow.getDate() + nextCount);
+
+            // ข้อมูลภาษาไทย
+            const daysTH = ['วันอาทิตย์','วันจันทร์','วันอังคาร','วันพุธ','วันพฤหัสบดี','วันศุกร์','วันเสาร์'];
+            const monthsTH = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                             'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+            
+            // แสดงผลข้อมูล
+            document.getElementById('thaiDayOfWeek').textContent = daysTH[thaiNow.getUTCDay()];
+            document.getElementById('thaiFullDate').textContent = 
+                `ที่ ${toThaiNumerals(thaiNow.getUTCDate())} ${monthsTH[thaiNow.getUTCMonth()]} ${toThaiNumerals(thaiNow.getUTCFullYear() + 543)}`;
+
+            const holyBox = document.getElementById('holyDayBox');
+            const statusIcon = document.getElementById('statusIcon');
+            const holyText = document.getElementById('holyDayText');
+
+            if (status.isWanPhra) {
+                holyBox.className = "holy-day-status is-holy";
+                holyText.textContent = "วันนี้เป็นวันพระ";
+                statusIcon.textContent = "🙏"; 
+            } else {
+                holyBox.className = "holy-day-status";
+                holyText.textContent = "วันนี้วันธรรมดา";
+                statusIcon.textContent = "🍃";
+            }
+
+            const phaseText = status.isWaxing ? "ขึ้น" : "แรม";
+            document.getElementById('thaiMoonPhase').textContent = `${phaseText} ${toThaiNumerals(status.dithi)} ค่ำ`;
+            document.getElementById('nextHolyCount').textContent = toThaiNumerals(nextCount);
+            document.getElementById('nextHolyDate').textContent = `(${nextHolyDateObj.getDate()} ${monthsTH[nextHolyDateObj.getMonth()]})`;
+            document.getElementById('dithiNumber').textContent = status.dithi;
+            document.getElementById('totalDays').textContent = daysPassed.toLocaleString();
         }
 
-        async function subscribeUser() {
-            errorMsg.classList.add('hidden');
+        // เมนูและการตั้งค่า
+        const menuBtn = document.getElementById('menuBtn');
+        const closeMenuBtn = document.getElementById('closeMenuBtn');
+        const sideMenu = document.getElementById('sideMenu');
+        const overlay = document.getElementById('overlay');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const root = document.documentElement;
 
-            // Check Support อย่างละเอียด
-            if (!('serviceWorker' in navigator)) {
-                showError('เบราว์เซอร์นี้ไม่รองรับ Service Worker');
-                return;
+        function toggleMenu() {
+            const isActive = sideMenu.classList.contains('active');
+            if (isActive) {
+                sideMenu.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                sideMenu.classList.add('active');
+                overlay.classList.add('active');
             }
+        }
+        
+        menuBtn.addEventListener('click', toggleMenu);
+        closeMenuBtn.addEventListener('click', toggleMenu);
+        overlay.addEventListener('click', toggleMenu);
 
-            if (!('PushManager' in window)) {
-                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-                if (isIOS) {
-                    showError('บน iOS ต้องกด "Add to Home Screen" ก่อนครับ');
-                } else {
-                    showError('เบราว์เซอร์นี้ไม่รองรับ Push (หรืออาจเป็นโหมด Incognito)');
-                }
-                return;
-            }
+        // การตั้งค่าขนาดฟอนต์
+        fontSizeSlider.addEventListener('input', (e) => {
+            const scale = e.target.value;
+            root.style.setProperty('--base-scale', scale);
+            localStorage.setItem('pakkhakhana_font_scale', scale);
+        });
 
-            const reg = await navigator.serviceWorker.ready;
+        const savedScale = localStorage.getItem('pakkhakhana_font_scale');
+        if (savedScale) {
+            root.style.setProperty('--base-scale', savedScale);
+            fontSizeSlider.value = savedScale;
+        }
 
-            try {
-                // ตรวจสอบว่า Subscribe ไปแล้วหรือยัง
-                let subscription = await reg.pushManager.getSubscription();
-
-                if (!subscription) {
-                    // ถ้ายัง ให้สมัครใหม่
-                    subscription = await reg.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+        // Service Worker สำหรับ PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('Service Worker ลงทะเบียนสำเร็จ:', registration);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker ลงทะเบียนล้มเหลว:', error);
                     });
-                }
+            });
+        } else {
+            console.log('เบราว์เซอร์นี้ไม่รองรับ Service Worker');
+        }
 
-                // สำเร็จ! แสดงผล
-                debugArea.classList.remove('hidden');
-                subJson.value = JSON.stringify(subscription, null, 2);
-                
-                btnSubscribe.innerHTML = '<i class="fas fa-check-circle mr-2"></i> เปิดแจ้งเตือนแล้ว';
-                btnSubscribe.classList.remove('bg-orange-600', 'hover:bg-orange-700');
-                btnSubscribe.classList.add('bg-green-600', 'hover:bg-green-700');
-                
-                // (ในระบบจริง ตรงนี้คือจุดที่ส่ง subscription ไปเก็บที่ Database ของคุณ)
-                // await fetch('/api/save-subscription', { method: 'POST', body: JSON.stringify(subscription) });
-
-            } catch (err) {
-                console.error('Subscribe Error:', err);
-                showError('เกิดข้อผิดพลาด: ' + err.message);
+        // ปุ่มแจ้งเตือน (Push Notification)
+        document.getElementById('notifyBtn').addEventListener('click', async () => {
+            if (!('serviceWorker' in navigator)) {
+                alert('เบราว์เซอร์นี้ไม่รองรับ Service Worker');
+                return;
             }
-        }
 
-        function showError(msg) {
-            errorMsg.textContent = msg;
-            errorMsg.classList.remove('hidden');
-        }
+            // ขอสิทธิ์การแจ้งเตือนเบื้องต้น
+            const permission = await Notification.requestPermission();
+            
+            if (permission === 'granted') {
+                try {
+                    const register = await navigator.serviceWorker.ready;
+                    const subscription = await register.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+                    });
 
-        function copySub() {
-            subJson.select();
-            document.execCommand('copy');
-            alert('คัดลอก JSON แล้ว นำไปทดสอบยิง Push ได้เลย');
-        }
+                    console.log("Copy JSON ด้านล่างไปใส่ใน GitHub Secret ชื่อ SUBSCRIPTION_JSON:");
+                    console.log(JSON.stringify(subscription));
+                    alert('สมัครรับแจ้งเตือนเรียบร้อย! (ดู Console log เพื่อเอาค่า Key)');
+                } catch (error) {
+                    console.error("สมัครไม่สำเร็จ:", error);
+                    alert('เกิดข้อผิดพลาดในการสมัครรับแจ้งเตือน: ' + error.message);
+                }
+            } else {
+                alert('การแจ้งเตือนถูกปฏิเสธ กรุณาอนุญาตการแจ้งเตือนในเบราว์เซอร์');
+            }
+        });
 
-        // Init
-        checkEnvironment();
-        initCalendar();
-        registerServiceWorker();
-        btnSubscribe.addEventListener('click', subscribeUser);
-
+        // โหลดครั้งแรก
+        window.onload = render;
     </script>
 </body>
 </html>
-
-
