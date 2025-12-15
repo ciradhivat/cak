@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปฏิทินปักขคณนา PWA</title>
+    <link rel="manifest" href="manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap');
+        body { font-family: 'Sarabun', sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
+        <!-- Header -->
+        <div class="bg-[#4E342E] p-6 text-white text-center relative">
+            <div id="connection-status" class="absolute top-4 right-4 text-xs bg-red-500 px-2 py-1 rounded hidden">
+                <i class="fas fa-unlock"></i> ไม่ปลอดภัย
+            </div>
+            <i class="fas fa-dharmachakra fa-3x mb-3"></i>
+            <h1 class="text-2xl font-bold">ปฏิทินปักขคณนา</h1>
+            <p class="text-yellow-100 text-sm mt-1">แจ้งเตือนวันพระ (PWA)</p>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 space-y-6">
+
+            <!-- Status Display -->
+            <div id="status-card" class="bg-orange-50 border border-orange-200 rounded-lg p-4 text-center">
+                <p class="text-gray-500 text-sm">สถานะวันนี้</p>
+                <h2 id="current-date" class="text-lg font-semibold text-gray-800 mb-1">...</h2>
+                <div id="moon-phase" class="text-[#4E342E] font-medium text-lg mt-2">กำลังคำนวณ...</div>
+            </div>
+
+            <!-- Push Notification Settings -->
+            <div class="space-y-4">
+                <h3 class="font-bold text-gray-700 border-b pb-2">ระบบแจ้งเตือน (Push)</h3>
+                
+                <!-- คำแนะนำสำหรับ iOS -->
+                <div id="ios-guide" class="hidden bg-gray-100 p-3 rounded-lg text-sm text-gray-700 mb-2 border border-gray-300">
+                    <p class="font-bold mb-1"><i class="fab fa-apple"></i> สำหรับผู้ใช้ iOS/iPhone:</p>
+                    <p>ระบบแจ้งเตือนจะทำงานเมื่อ:</p>
+                    <ol class="list-decimal list-inside ml-1">
+                        <li>กดปุ่มแชร์ (Share) ด้านล่าง</li>
+                        <li>เลือก <strong>"เพิ่มไปยังหน้าจอโฮม" (Add to Home Screen)</strong></li>
+                        <li>เปิดแอปจากไอคอนที่หน้าจอโฮม</li>
+                    </ol>
+                </div>
+
+                <div class="bg-blue-50 p-3 rounded-lg text-sm text-blue-800 mb-2">
+                    <i class="fas fa-info-circle"></i> การแจ้งเตือนจะทำงานแม้ไม่ได้เปิดแอป
+                </div>
+
+                <button id="btn-subscribe" class="w-full bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-lg transition shadow-md flex items-center justify-center">
+                    <i class="fas fa-bell mr-2"></i> เปิดรับการแจ้งเตือน
+                </button>
+                <p id="error-msg" class="text-red-500 text-xs text-center hidden"></p>
+
+                <!-- Area to show Subscription JSON -->
+                <div id="debug-area" class="hidden animate-fade-in">
+                    <label class="text-xs text-gray-500 font-bold block mb-1">Copy โค้ดนี้ไปใส่ใน Server เพื่อยิงแจ้งเตือน:</label>
+                    <textarea id="sub-json" rows="5" class="w-full text-[10px] p-2 border rounded bg-gray-800 text-green-400 font-mono" readonly></textarea>
+                    <button onclick="copySub()" class="w-full mt-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs py-2 rounded">
+                        <i class="fas fa-copy"></i> คัดลอกโค้ด
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 px-6 py-3 text-center text-xs text-gray-400">
+            Version 1.1 (VAPID Integrated)
+        </div>
+    </div>
+
+    <!-- Load Library -->
+    <script src="pakkhakhana.js"></script>
+
+    <script>
+        // --- KEY ที่คุณให้มา ---
+        const VAPID_PUBLIC_KEY = 'BKUDmY_hkeUeuFfdc77JgVgacjVpkHlESB84o-Y83-MHVXINvvxaJ7bfvGV9MmNgYuRReQ0PdAYlGPMmDIqdwZg';
+
+        // UI References
+        const btnSubscribe = document.getElementById('btn-subscribe');
+        const debugArea = document.getElementById('debug-area');
+        const subJson = document.getElementById('sub-json');
+        const errorMsg = document.getElementById('error-msg');
+        const iosGuide = document.getElementById('ios-guide');
+        const connectionStatus = document.getElementById('connection-status');
+
+        // ตรวจสอบสภาพแวดล้อมเบื้องต้น
+        function checkEnvironment() {
+            // 1. Check HTTPS
+            const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            const isHttps = location.protocol === 'https:';
+            
+            if (!isLocalhost && !isHttps) {
+                connectionStatus.classList.remove('hidden');
+                showError("ระบบแจ้งเตือนต้องใช้งานผ่าน HTTPS เท่านั้น");
+                btnSubscribe.disabled = true;
+                btnSubscribe.classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            // 2. Check iOS Standalone Mode
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
+            if (isIOS && !isStandalone) {
+                iosGuide.classList.remove('hidden');
+            }
+        }
+
+        function initCalendar() {
+            const currentDateEl = document.getElementById('current-date');
+            const moonPhaseEl = document.getElementById('moon-phase');
+            
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            currentDateEl.textContent = now.toLocaleDateString('th-TH', options);
+
+            if (typeof PakkhakhanaEngine !== 'undefined') {
+                const engine = new PakkhakhanaEngine();
+                // *หมายเหตุ: ต้อง implement logic การเทียบวันที่จริงกับปฏิทินที่นี่
+                // code นี้แสดงค่าเริ่มต้นของ engine
+                const status = engine.getCurrentStatus();
+                moonPhaseEl.textContent = `แรม ${status.dithi} ค่ำ (สถานะเริ่มต้น)`;
+            }
+        }
+
+        // Helper แปลง Key
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+
+        async function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const reg = await navigator.serviceWorker.register('./sw.js');
+                    console.log('SW Registered');
+                    return reg;
+                } catch (error) {
+                    console.error('SW Register failed:', error);
+                    showError("ไม่สามารถติดตั้ง Service Worker ได้");
+                }
+            }
+        }
+
+        async function subscribeUser() {
+            errorMsg.classList.add('hidden');
+
+            // Check Support อย่างละเอียด
+            if (!('serviceWorker' in navigator)) {
+                showError('เบราว์เซอร์นี้ไม่รองรับ Service Worker');
+                return;
+            }
+
+            if (!('PushManager' in window)) {
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                if (isIOS) {
+                    showError('บน iOS ต้องกด "Add to Home Screen" ก่อนครับ');
+                } else {
+                    showError('เบราว์เซอร์นี้ไม่รองรับ Push (หรืออาจเป็นโหมด Incognito)');
+                }
+                return;
+            }
+
+            const reg = await navigator.serviceWorker.ready;
+
+            try {
+                // ตรวจสอบว่า Subscribe ไปแล้วหรือยัง
+                let subscription = await reg.pushManager.getSubscription();
+
+                if (!subscription) {
+                    // ถ้ายัง ให้สมัครใหม่
+                    subscription = await reg.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+                    });
+                }
+
+                // สำเร็จ! แสดงผล
+                debugArea.classList.remove('hidden');
+                subJson.value = JSON.stringify(subscription, null, 2);
+                
+                btnSubscribe.innerHTML = '<i class="fas fa-check-circle mr-2"></i> เปิดแจ้งเตือนแล้ว';
+                btnSubscribe.classList.remove('bg-orange-600', 'hover:bg-orange-700');
+                btnSubscribe.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+                // (ในระบบจริง ตรงนี้คือจุดที่ส่ง subscription ไปเก็บที่ Database ของคุณ)
+                // await fetch('/api/save-subscription', { method: 'POST', body: JSON.stringify(subscription) });
+
+            } catch (err) {
+                console.error('Subscribe Error:', err);
+                showError('เกิดข้อผิดพลาด: ' + err.message);
+            }
+        }
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.remove('hidden');
+        }
+
+        function copySub() {
+            subJson.select();
+            document.execCommand('copy');
+            alert('คัดลอก JSON แล้ว นำไปทดสอบยิง Push ได้เลย');
+        }
+
+        // Init
+        checkEnvironment();
+        initCalendar();
+        registerServiceWorker();
+        btnSubscribe.addEventListener('click', subscribeUser);
+
+    </script>
+</body>
+</html>
+
+
