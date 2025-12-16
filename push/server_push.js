@@ -51,7 +51,7 @@ if (status.shouldNotify) {
     const payload = JSON.stringify({
         title: status.title,
         body: status.body,
-        icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png'
+        icon: './icon-192.png'
     });
 
     console.log("🚀 กำลังส่งแจ้งเตือน...");
