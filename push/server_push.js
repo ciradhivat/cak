@@ -34,11 +34,13 @@ function checkTodayStatus() {
     
     // เพื่อให้ทดสอบผ่าน GitHub Actions ได้ ผมจะส่งข้อความทุกครั้งที่รัน
     // ในใช้งานจริง คุณสามารถใส่ if (isWanPhra) {...} ครอบไว้
+    if (isWanPhra) {
     return {
         shouldNotify: true,
         title: "แจ้งเตือนจาก GitHub Actions",
         body: "ทดสอบระบบแจ้งเตือนประจำวัน (Run via Workflow)"
     };
+    }
 }
 
 const status = checkTodayStatus();
