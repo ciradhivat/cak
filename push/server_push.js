@@ -19,7 +19,7 @@ if (!publicVapidKey || !privateVapidKey || !subscriptionJson) {
 
 // ตั้งค่า Web Push
 webPush.setVapidDetails(
-    'mailto:test@example.com',
+    'mailto:ciradhivat@gmail.com',
     publicVapidKey,
     privateVapidKey
 );
