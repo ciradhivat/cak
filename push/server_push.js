@@ -34,7 +34,7 @@ function checkTodayStatus() {
     // TODO: ใส่ Logic เทียบวันที่จริงตรงนี้
     // ปัจจุบัน: ใช้ตัวอย่างวันที่เพื่อทดสอบ
     // สำหรับการใช้งานจริง ต้องคำนวณจำนวนวันตั้งแต่ anchor date
-    const anchorDate = new Date('1736-01-28); // ตัวอย่าง anchor date
+    const anchorDate = new Date('1736-01-28'); // ตัวอย่าง anchor date
     const today = new Date();
     
     // คำนวณจำนวนวันจาก anchor date ถึงวันนี้
