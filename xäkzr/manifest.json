@@ -1,6 +1,6 @@
 ﻿{
-  "name": "Pali Blitz",
-  "short_name": "PaliBlitz",
+  "name": "Phak Blitz",
+  "short_name": "PhakBlitz",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f0f2f5",
@@ -8,12 +8,12 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/282/282136.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/282/282136.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
