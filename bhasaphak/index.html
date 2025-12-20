@@ -1,0 +1,333 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Reader</title>
+    
+    <!-- PWA Setup -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#b58900">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;700&family=Maitree:wght@300;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* --- 1. Variables & Theme --- */
+        :root {
+            /* Light Mode (Default) */
+            --bg: #fdf6e3;
+            --text: #383838;
+            --accent: #b58900;
+            --nav-bg: #073642;
+            --quote: #268bd2;
+            --menu-bg: #ffffff;
+            --menu-hover: #fdfbf7;
+            --border-color: #eee;
+        }
+
+        /* Dark Mode Override */
+        body.dark-mode {
+            --bg: #1a1a1a;
+            --text: #d0d0d0;
+            --accent: #d4af37;
+            --nav-bg: #000000;
+            --quote: #64b5f6;
+            --menu-bg: #252525;
+            --menu-hover: #333333;
+            --border-color: #444;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Sarabun', sans-serif;
+            margin: 0;
+            line-height: 1.8;
+            overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s; /* Effect เปลี่ยนสีนุ่มๆ */
+        }
+
+        /* --- Header & Navbar --- */
+        header {
+            background: var(--nav-bg); 
+            color: white; 
+            padding: 0.8rem 1rem;
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+            
+            /* Smart Navbar Config */
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+            transition: transform 0.3s ease-in-out;
+        }
+        .header-hidden { transform: translateY(-100%); }
+
+        .header-btn { background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; padding: 0 10px; }
+        .page-title { font-family: 'Maitree', serif; font-weight: bold; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; }
+
+        /* --- Menus --- */
+        .side-menu {
+            position: fixed; top: 60px; bottom: 0; width: 260px;
+            background: var(--menu-bg); /* ใช้ตัวแปร */
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease; padding: 10px; z-index: 2000;
+            overflow-y: auto;
+        }
+        #left-menu { left: 0; transform: translateX(-100%); } #left-menu.active { transform: translateX(0); }
+        #right-menu { right: 0; transform: translateX(100%); } #right-menu.active { transform: translateX(0); }
+
+        .menu-item { 
+            display: block; padding: 12px; 
+            border-bottom: 1px solid var(--border-color); /* ใช้ตัวแปร */
+            text-decoration: none; color: var(--text); cursor: pointer; font-size: 0.95rem; 
+        }
+        .menu-item:hover { background: var(--menu-hover); color: var(--accent); }
+        .menu-item.active { font-weight: bold; color: var(--accent); border-left: 4px solid var(--accent); }
+        
+        .toc-h1 { font-weight: bold; color: var(--accent); }
+        .toc-h2 { padding-left: 20px; font-size: 0.9em; opacity: 0.9; }
+        .toc-h3 { padding-left: 35px; font-size: 0.85em; opacity: 0.7; }
+
+        /* --- Content --- */
+        main {
+            max-width: 720px; margin: 0 auto; padding: 30px 20px;
+            font-size: 1.15rem; min-height: 100vh;
+            padding-top: 80px; /* เผื่อที่ให้ Header */
+        }
+        
+        h1, h2, h3 { font-family: 'Maitree', serif; color: var(--accent); margin-top: 1.5em; line-height: 1.4; scroll-margin-top: 80px; }
+        h1 { text-align: center; font-size: 1.8rem; border-bottom: 3px double var(--border-color); padding-bottom: 10px; }
+        
+        p { margin-bottom: 1.5em; text-align: justify; text-indent: 40px; }
+        .dialogue { color: var(--quote); font-family: 'Sarabun', sans-serif; font-weight: 500; }
+
+        p, li, div { overflow-wrap: break-word; word-wrap: break-word; max-width: 100%; }
+        img { max-width: 100%; height: auto; display: block; margin: 10px auto; }
+        .loading-text { text-align: center; opacity: 0.5; margin-top: 50px; }
+        
+        #bookmark-toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 10px 20px; border-radius: 20px;
+            font-size: 0.9rem; opacity: 0; transition: opacity 0.5s; pointer-events: none; z-index: 3000;
+        }
+
+/* --- ส่วนแก้ปัญหา Text ล้นจอ (Soft Wrap) --- */
+
+/* 1. บังคับตัดคำในทุกย่อหน้า */
+p, h1, h2, h3, li, div {
+    overflow-wrap: break-word;  /* ตัดคำยาวๆ ลงมาบรรทัดใหม่ */
+    word-wrap: break-word;      /* รองรับ Browser เก่า */
+    max-width: 100%;            /* ห้ามกว้างเกินหน้าจอ */
+}
+
+/* 2. แก้ปัญหา Code Block (ที่เกิดจากการเผลอเคาะวรรคย่อหน้า) */
+pre, code {
+    white-space: pre-wrap !important; /* บังคับให้ Code ยอมขึ้นบรรทัดใหม่ */
+    word-break: break-word !important;
+    max-width: 100%;
+    background-color: transparent; /* เอาสีพื้นหลังเทาๆ ออก (ถ้าไม่ชอบ) */
+    border: none;
+}
+
+/* 3. แก้ปัญหารูปภาพล้นจอ */
+img {
+    max-width: 100%;    /* รูปห้ามกว้างเกินหน้าจอ */
+    height: auto;       /* ปรับสูงอัตโนมัติ */
+    display: block;     /* จัดจัดรูปให้อยู่ตรงกลางง่ายขึ้น */
+    margin: 10px auto;
+}
+
+/* 4. ป้องกันตารางล้นจอ (ถ้ามี) */
+table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;   /* ถ้าตารางกว้างจริง ให้เลื่อนเฉพาะตาราง */
+}
+
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <button class="header-btn" onclick="toggleLeftMenu()">☰ <span style="font-size:0.8rem">สารบัญ</span></button>
+        
+        <div style="display:flex; align-items:center; gap:10px; overflow:hidden; flex: 1; justify-content: center;">
+            <div class="page-title" id="display-title">Loading...</div>
+            <button id="theme-btn" style="background:none; border:none; cursor:pointer; font-size:1.2rem; padding:5px;">🌙</button>
+        </div>
+
+        <button class="header-btn" onclick="toggleRightMenu()"><span style="font-size:0.8rem">ตอน</span> ☰</button>
+    </header>
+
+    <div id="left-menu" class="side-menu"><div id="toc-list"></div></div>
+    <div id="right-menu" class="side-menu"><div id="file-list"></div></div>
+
+    <main id="content" onclick="closeAllMenus()">
+        <div class="loading-text">กำลังโหลด...</div>
+    </main>
+    
+    <div id="bookmark-toast">บันทึกตำแหน่งอ่านแล้ว</div>
+
+    <script>
+        // ==========================================
+        const files = [ "01.md", "02.md" ]; 
+        // ==========================================
+
+        let currentFile = "";
+        let saveTimeout;
+        let lastScrollY = window.scrollY;
+        const header = document.querySelector('header');
+
+        marked.use({ breaks: true, gfm: true });
+
+        // --- Menu Logic ---
+        function toggleLeftMenu() { document.getElementById('right-menu').classList.remove('active'); document.getElementById('left-menu').classList.toggle('active'); }
+        function toggleRightMenu() { document.getElementById('left-menu').classList.remove('active'); document.getElementById('right-menu').classList.toggle('active'); }
+        function closeAllMenus() { document.getElementById('left-menu').classList.remove('active'); document.getElementById('right-menu').classList.remove('active'); }
+
+        // --- Theme Logic ---
+        const themeBtn = document.getElementById('theme-btn');
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            themeBtn.textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        }
+        themeBtn.onclick = (e) => { e.stopPropagation(); toggleTheme(); };
+
+        // --- Core Load File ---
+        async function loadFile(filename, scrollPos = 0) {
+            closeAllMenus();
+            currentFile = filename;
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = "<div class='loading-text'>กำลังโหลด...</div>";
+
+            try {
+                const res = await fetch(filename, { cache: "no-cache" });
+                if(!res.ok) throw new Error("File not found");
+                const text = await res.text();
+
+                let html = marked.parse(text);
+                html = html.replace(/“([^”]+)”|"(.*?)"/g, (match) => `<span class="dialogue">${match}</span>`);
+                contentDiv.innerHTML = html;
+
+                generateTOC();
+                const firstLine = text.split('\n')[0].replace(/#/g, '').trim();
+                document.getElementById('display-title').textContent = firstLine || filename;
+                updateActiveFile(filename);
+
+                if (scrollPos > 0) {
+                    setTimeout(() => { window.scrollTo(0, scrollPos); showToast("กลับมาที่เดิมแล้ว"); }, 100);
+                } else {
+                    window.scrollTo(0, 0);
+                }
+            } catch (e) {
+                contentDiv.innerHTML = `<h3 style='color:red; text-align:center'>Error loading ${filename}</h3>`;
+            }
+        }
+
+        // --- Smart Navbar & Auto Bookmark ---
+        window.addEventListener('scroll', () => {
+            if (window.scrollY < 0) return; // Ignore bounce
+
+            // Navbar
+            if (window.scrollY > lastScrollY && window.scrollY > 50) {
+                header.classList.add('header-hidden');
+            } else {
+                header.classList.remove('header-hidden');
+            }
+            lastScrollY = window.scrollY;
+
+            // Bookmark
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                if(currentFile) {
+                    localStorage.setItem('lastRead_file', currentFile);
+                    localStorage.setItem('lastRead_scroll', window.scrollY);
+                }
+            }, 500);
+        });
+
+        function showToast(msg) {
+            const toast = document.getElementById('bookmark-toast');
+            toast.textContent = msg;
+            toast.style.opacity = 1;
+            setTimeout(() => { toast.style.opacity = 0; }, 2000);
+        }
+
+        function generateTOC() {
+            const tocList = document.getElementById('toc-list');
+            tocList.innerHTML = "";
+            const headers = document.querySelectorAll('#content h1, #content h2, #content h3');
+            if(headers.length === 0) { tocList.innerHTML = "<div style='padding:10px; opacity:0.5'>ไม่มีหัวข้อ</div>"; return; }
+            headers.forEach((header, index) => {
+                if (!header.id) header.id = 'header-' + index;
+                const link = document.createElement('a');
+                link.className = 'menu-item';
+                link.textContent = header.textContent;
+                link.href = '#' + header.id;
+                if(header.tagName === 'H1') link.classList.add('toc-h1');
+                else if(header.tagName === 'H2') link.classList.add('toc-h2');
+                else link.classList.add('toc-h3');
+                link.onclick = (e) => { e.preventDefault(); document.getElementById(header.id).scrollIntoView({behavior: 'smooth'}); closeAllMenus(); };
+                tocList.appendChild(link);
+            });
+        }
+
+        async function initApp() {
+            // Restore Theme
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeBtn.textContent = '☀️';
+            }
+
+            // Create File Menu
+            const listContainer = document.getElementById('file-list');
+            for (const f of files) {
+                const item = document.createElement('div');
+                item.className = 'menu-item';
+                item.dataset.file = f;
+                item.innerHTML = "Loading...";
+                item.onclick = () => loadFile(f);
+                listContainer.appendChild(item);
+                fetch(f).then(res => res.text()).then(text => {
+                    const firstLine = text.split('\n')[0].replace(/#/g, '').trim();
+                    item.innerHTML = firstLine || f;
+                }).catch(() => item.innerHTML = f);
+            }
+
+            // Restore Reading Position
+            const savedFile = localStorage.getItem('lastRead_file');
+            const savedScroll = parseInt(localStorage.getItem('lastRead_scroll') || '0');
+            if (savedFile && files.includes(savedFile)) {
+                loadFile(savedFile, savedScroll);
+            } else {
+                if(files.length > 0) loadFile(files[0]);
+            }
+        }
+
+        function updateActiveFile(filename) {
+            document.querySelectorAll('#file-list .menu-item').forEach(el => {
+                el.classList.remove('active');
+                if(el.dataset.file === filename) el.classList.add('active');
+            });
+        }
+
+        initApp();
+
+        // --- Service Worker Registration ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered!', reg.scope))
+                    .catch(err => console.log('Service Worker Registration Failed:', err));
+            });
+        }
+    </script>
+</body>
+</html>
+
