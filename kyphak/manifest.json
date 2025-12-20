@@ -1,7 +1,7 @@
 ﻿{
   "name": "Thai-Latin Notepad",
   "short_name": "TL Note",
-  "start_url": "./phakkypwa.html",
+  "start_url": "./index.html",
   "display": "fullscreen",
   "background_color": "#fafafa",
   "theme_color": "#bf360c",
