@@ -65,7 +65,7 @@
         const apps = [
             {
                 name: "Memo",
-                iconFile: "Memo-512.png",
+                iconFile: "memo-512.png",
                 url: "https://ciradhivat.github.io/cak/memo/"
             },
             {
@@ -74,8 +74,8 @@
                 url: "https://ciradhivat.github.io/cak/xäkzr/"
             },
             {
-                name: "vänpra",
-                iconFile: "vänpra-512.png",
+                name: "vänbra",
+                iconFile: "vänbra-512.png",
                 url: "https://ciradhivat.github.io/cak/push/"
             },
             {
@@ -96,7 +96,7 @@
             // สมมุติว่ารูปภาพอยู่ที่ root ของ URL นั้นๆ (หรือคุณสามารถแก้ path ตรงนี้ได้)
             // เช่น ถ้า icon อยู่ใน folder เดียวกับ store ให้เปลี่ยน src เป็น path ของ store
             // แต่กรณีนี้ผมจะลองดึงจาก URL ของแอปโดยตรง
-            const iconUrl = app.url + app.iconFile; 
+            const iconUrl = app.iconFile; 
 
             const card = document.createElement('a');
             card.className = 'app-card';
