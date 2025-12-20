@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+
     <title>CAK Store</title>
     <style>
         /* ตั้งค่า CSS พื้นฐานให้ดูทันสมัยและรองรับมือถือ */
@@ -65,27 +67,27 @@
         const apps = [
             {
                 name: "Memo",
-                iconFile: "memo-512.png",
+                iconFile: "memo-192.png",
                 url: "https://ciradhivat.github.io/cak/memo/"
             },
             {
                 name: "xäkzr",
-                iconFile: "xäkzrekm-512.png",
+                iconFile: "xäkzrekm-192.png",
                 url: "https://ciradhivat.github.io/cak/xäkzr/"
             },
             {
                 name: "vänbra",
-                iconFile: "vänbra-512.png",
+                iconFile: "vänbra-192.png",
                 url: "https://ciradhivat.github.io/cak/push/"
             },
             {
                 name: "phäk",
-                iconFile: "phak-512.png",
+                iconFile: "phak-192.png",
                 url: "https://ciradhivat.github.io/cak/bhasaphak/"
             },
             {
                 name: "eepőnphäk",
-                iconFile: "kyphak-512.png",
+                iconFile: "kyphak-192.png",
                 url: "https://ciradhivat.github.io/cak/kyphak/"
             }
         ];
@@ -111,6 +113,15 @@
 
             container.appendChild(card);
         });
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registered!', reg))
+            .catch(err => console.log('Service Worker registration failed: ', err));
+    });
+}
+
     </script>
 </body>
 </html>
