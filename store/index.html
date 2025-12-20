@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAK Store</title>
+    <style>
+        /* ตั้งค่า CSS พื้นฐานให้ดูทันสมัยและรองรับมือถือ */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f5f5f7; margin: 0; padding: 20px; }
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { margin: 0; color: #333; }
+        
+        /* Grid Layout สำหรับแสดงแอป */
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* ปรับขนาดตามหน้าจอ */
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* การ์ดของแต่ละแอป */
+        .app-card {
+            background: white;
+            border-radius: 16px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .app-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        /* รูปไอคอน */
+        .app-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            object-fit: cover;
+            margin-bottom: 10px;
+            background-color: #eee; /* สีพื้นหลังระหว่างรอโหลดรูป */
+        }
+
+        .app-name { font-size: 14px; font-weight: 600; color: #333; }
+        .install-badge { font-size: 10px; color: #007aff; margin-top: 5px; background: #e5f1ff; padding: 2px 8px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CAK Store</h1>
+        <p>คลังรวบรวม PWA By Ciradhivat</p>
+    </header>
+
+    <div id="app-container" class="app-grid">
+        </div>
+
+    <script>
+        // ข้อมูลแอปของคุณ
+        const apps = [
+            {
+                name: "Memo",
+                iconFile: "Memo-512.png",
+                url: "https://ciradhivat.github.io/cak/memo/"
+            },
+            {
+                name: "xäkzr",
+                iconFile: "xäkzrekm-512.png",
+                url: "https://ciradhivat.github.io/cak/xäkzr/"
+            },
+            {
+                name: "vänpra",
+                iconFile: "vänpra-512.png",
+                url: "https://ciradhivat.github.io/cak/push/"
+            },
+            {
+                name: "phäk",
+                iconFile: "phak-512.png",
+                url: "https://ciradhivat.github.io/cak/bhasaphak/"
+            },
+            {
+                name: "eepőnphäk",
+                iconFile: "kyphak-512.png",
+                url: "https://ciradhivat.github.io/cak/kyphak/"
+            }
+        ];
+
+        const container = document.getElementById('app-container');
+
+        apps.forEach(app => {
+            // สมมุติว่ารูปภาพอยู่ที่ root ของ URL นั้นๆ (หรือคุณสามารถแก้ path ตรงนี้ได้)
+            // เช่น ถ้า icon อยู่ใน folder เดียวกับ store ให้เปลี่ยน src เป็น path ของ store
+            // แต่กรณีนี้ผมจะลองดึงจาก URL ของแอปโดยตรง
+            const iconUrl = app.url + app.iconFile; 
+
+            const card = document.createElement('a');
+            card.className = 'app-card';
+            card.href = app.url;
+            card.target = "_blank"; // เปิดแท็บใหม่
+
+            card.innerHTML = `
+                <img src="${iconUrl}" alt="${app.name}" class="app-icon" onerror="this.src='https://via.placeholder.com/64'">
+                <div class="app-name">${app.name}</div>
+                <div class="install-badge">OPEN</div>
+            `;
+
+            container.appendChild(card);
+        });
+    </script>
+</body>
+</html>
