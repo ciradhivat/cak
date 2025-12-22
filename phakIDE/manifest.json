@@ -5,8 +5,8 @@
   "display": "standalone",
   "background_color": "#111827",
   "theme_color": "#1f2937",
-"description": "ผักกระดานเขียนโค้ดพีดับบริวเอ"
-"orientation": "portrait",
+  "description": "ผักกระดานเขียนโค้ดพีดับบริวเอ",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",

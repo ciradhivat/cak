@@ -1,5 +1,5 @@
-﻿const CACHE_NAME = 'cak-store-v1';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'phak-ide-v2'; // อัปเดตเวอร์ชัน cache
+const urlsToCache = [
   './',
   './index.html',
   './manifest.json',
@@ -7,42 +7,39 @@ const ASSETS_TO_CACHE = [
   './icon-512.png'
 ];
 
-// 1. Install Event: เก็บไฟล์ลง Cache
-self.addEventListener('install', (event) => {
+// ติดตั้ง Service Worker และ Cache ไฟล์
+self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[Service Worker] Caching all assets');
-        return cache.addAll(ASSETS_TO_CACHE);
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
       })
   );
-  self.skipWaiting();
 });
 
-// 2. Activate Event: ลบ Cache เก่าทิ้งเมื่อมีการอัปเดต
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(keyList.map((key) => {
-        if (key !== CACHE_NAME) {
-          console.log('[Service Worker] Removing old cache', key);
-          return caches.delete(key);
-        }
-      }));
+// ทำงานเมื่อมีการเรียกใช้ข้อมูล (Network First, fallback to Cache)
+// วิธีนี้ดีสำหรับ Editor เพื่อให้แน่ใจว่าได้โค้ดล่าสุดเสมอ แต่ถ้าเน็ตหลุดก็ยังใช้ได้
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    fetch(event.request).catch(() => {
+      return caches.match(event.request);
     })
   );
-  self.clients.claim();
 });
 
-// 3. Fetch Event: ดึงข้อมูลจาก Cache ก่อน ถ้าไม่มีค่อยไปโหลดจากเน็ต
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response; // เจอใน cache ส่งกลับเลย
-        }
-        return fetch(event.request); // ไม่เจอ ไปโหลดใหม่
-      })
+// ลบ Cache เก่าเมื่อมีการอัปเดต Service Worker
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
 });
