@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json">
 
     <title>CAK Store</title>
     <style>
-        /* ตั้งค่า CSS พื้นฐานให้ดูทันสมัยและรองรับมือถือ */
+        /* ตั้งค่า CSS พื้นฐาน (คงเดิม) */
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f5f5f7; margin: 0; padding: 20px; }
         header { text-align: center; margin-bottom: 30px; }
         h1 { margin: 0; color: #333; }
         
-        /* Grid Layout สำหรับแสดงแอป */
+        /* Grid Layout */
         .app-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* ปรับขนาดตามหน้าจอ */
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
             gap: 20px;
             max-width: 800px;
             margin: 0 auto;
         }
 
-        /* การ์ดของแต่ละแอป */
+        /* App Card */
         .app-card {
             background: white;
             border-radius: 16px;
@@ -38,18 +38,72 @@
         
         .app-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
 
-        /* รูปไอคอน */
+        /* Icon */
         .app-icon {
             width: 64px;
             height: 64px;
             border-radius: 14px;
             object-fit: cover;
             margin-bottom: 10px;
-            background-color: #eee; /* สีพื้นหลังระหว่างรอโหลดรูป */
+            background-color: #eee;
         }
 
         .app-name { font-size: 14px; font-weight: 600; color: #333; }
         .install-badge { font-size: 10px; color: #007aff; margin-top: 5px; background: #e5f1ff; padding: 2px 8px; border-radius: 10px; }
+
+        /* --- ส่วนที่เพิ่มใหม่ (New UI Elements) --- */
+        
+        /* ปุ่ม Install ใน Header (ซ่อนเป็นค่าเริ่มต้น) */
+        #install-btn {
+            display: none; /* ซ่อนไว้ก่อน */
+            margin-top: 10px;
+            background-color: #007aff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,122,255,0.3);
+        }
+        #install-btn:active { transform: scale(0.95); }
+
+        /* แถบแจ้งเตือน Update (Snackbar) */
+        #update-toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        #update-toast.show { visibility: visible; animation: fadein 0.5s; }
+        
+        #reload-btn {
+            background: #007aff;
+            border: none;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
     </style>
 </head>
 <body>
@@ -57,75 +111,127 @@
     <header>
         <h1>CAK Store</h1>
         <p>คลังรวบรวม PWA By Ciradhivat</p>
+        <button id="install-btn">ติดตั้งแอป ↓</button>
     </header>
 
     <div id="app-container" class="app-grid">
-        </div>
+    </div>
+
+    <div id="update-toast">
+        <span>มีเวอร์ชันใหม่พร้อมใช้งาน</span>
+        <button id="reload-btn">อัปเดตเลย</button>
+    </div>
 
     <script>
-        // ข้อมูลแอปของคุณ
+        // ข้อมูลแอป (คงเดิม)
         const apps = [
-            {
-                name: "Memo",
-                iconFile: "memo-192.png",
-                url: "https://ciradhivat.github.io/cak/memo/"
-            },
-            {
-                name: "xäkzr",
-                iconFile: "xäkzrekm-192.png",
-                url: "https://ciradhivat.github.io/cak/xäkzr/"
-            },
-            {
-                name: "vänbra",
-                iconFile: "vänbra-192.png",
-                url: "https://ciradhivat.github.io/cak/push/"
-            },
-            {
-                name: "phäk",
-                iconFile: "phak-192.png",
-                url: "https://ciradhivat.github.io/cak/bhasaphak/"
-            },
-            {
-                name: "eepőnphäk",
-                iconFile: "kyphak-192.png",
-                url: "https://ciradhivat.github.io/cak/kyphak/"
-            },
-{
-                name: "phäkIDE",
-                iconFile: "phakIDE-192.png",
-                url: "https://ciradhivat.github.io/cak/phakIDE/"
-            }
+            { name: "Memo", iconFile: "memo-192.png", url: "https://ciradhivat.github.io/cak/memo/" },
+            { name: "xäkzr", iconFile: "xäkzrekm-192.png", url: "https://ciradhivat.github.io/cak/xäkzr/" },
+            { name: "vänbra", iconFile: "vänbra-192.png", url: "https://ciradhivat.github.io/cak/push/" },
+            { name: "phäk", iconFile: "phak-192.png", url: "https://ciradhivat.github.io/cak/bhasaphak/" },
+            { name: "eepőnphäk", iconFile: "kyphak-192.png", url: "https://ciradhivat.github.io/cak/kyphak/" },
+            { name: "phäkIDE", iconFile: "phakIDE-192.png", url: "https://ciradhivat.github.io/cak/phakIDE/" }
         ];
 
         const container = document.getElementById('app-container');
 
         apps.forEach(app => {
-            // สมมุติว่ารูปภาพอยู่ที่ root ของ URL นั้นๆ (หรือคุณสามารถแก้ path ตรงนี้ได้)
-            // เช่น ถ้า icon อยู่ใน folder เดียวกับ store ให้เปลี่ยน src เป็น path ของ store
-            // แต่กรณีนี้ผมจะลองดึงจาก URL ของแอปโดยตรง
             const iconUrl = app.iconFile; 
-
             const card = document.createElement('a');
             card.className = 'app-card';
             card.href = app.url;
-            card.target = "_blank"; // เปิดแท็บใหม่
+            card.target = "_blank";
 
             card.innerHTML = `
                 <img src="${iconUrl}" alt="${app.name}" class="app-icon" onerror="this.src='https://via.placeholder.com/64'">
                 <div class="app-name">${app.name}</div>
                 <div class="install-badge">OPEN</div>
             `;
-
             container.appendChild(card);
         });
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker registered!', reg))
-            .catch(err => console.log('Service Worker registration failed: ', err));
-    });
-}
+        // --- ส่วน Logic Service Worker & Install (ปรับปรุงใหม่) ---
+
+        let newWorker;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('Service Worker registered!', reg);
+
+                    // 1. เช็คว่ามี SW รอ update อยู่แล้วหรือไม่
+                    if (reg.waiting) {
+                        newWorker = reg.waiting;
+                        showUpdateToast(); 
+                        return;
+                    }
+
+                    // 2. ดักจับเมื่อมีการพบ update ใหม่
+                    reg.addEventListener('updatefound', () => {
+                        newWorker = reg.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showUpdateToast();
+                            }
+                        });
+                    });
+                });
+
+                // เมื่อมีการ reload ให้ refresh หน้าจอ
+                let refreshing;
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    if (refreshing) return;
+                    window.location.reload();
+                    refreshing = true;
+                });
+            });
+        }
+
+        // ฟังก์ชันแสดงปุ่มแจ้งเตือนอัปเดต
+        function showUpdateToast() {
+            const toast = document.getElementById('update-toast');
+            toast.className = "show";
+            
+            document.getElementById('reload-btn').addEventListener('click', () => {
+                if (newWorker) {
+                    newWorker.postMessage({ action: 'skipWaiting' });
+                }
+            });
+        }
+
+        // --- Logic ปุ่ม Install App ---
+        let deferredPrompt;
+        const installBtn = document.getElementById('install-btn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // ป้องกัน Chrome โชว์แถบ install อัตโนมัติ (แบบเก่า)
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // โชว์ปุ่มของเราเอง
+            installBtn.style.display = 'inline-block';
+        });
+
+        installBtn.addEventListener('click', (e) => {
+            installBtn.style.display = 'none'; // ซ่อนปุ่มเมื่อกด
+            if (deferredPrompt) {
+                deferredPrompt.prompt(); // สั่งให้ Browser โชว์ popup ยืนยัน
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+
+        // ซ่อนปุ่มถ้าติดตั้งแล้ว
+        window.addEventListener('appinstalled', () => {
+            installBtn.style.display = 'none';
+            console.log('PWA was installed');
+        });
 
     </script>
 </body>

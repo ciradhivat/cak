@@ -1,13 +1,13 @@
-﻿const CACHE_NAME = 'cak-store-v1';
+const CACHE_NAME = 'cak-store-v2'; // เปลี่ยนเวอร์ชันเพื่อทดสอบการ update ได้เลย
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './icon-192.png',
+  './icon-192.png', // ตรวจสอบว่ามีไฟล์รูปนี้จริง หรือแก้เป็น path ที่ถูก
   './icon-512.png'
 ];
 
-// 1. Install Event: เก็บไฟล์ลง Cache
+// 1. Install Event
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -16,10 +16,10 @@ self.addEventListener('install', (event) => {
         return cache.addAll(ASSETS_TO_CACHE);
       })
   );
-  self.skipWaiting();
+  // ลบ self.skipWaiting() ออก เพื่อให้รอ User ยืนยันการอัปเดต
 });
 
-// 2. Activate Event: ลบ Cache เก่าทิ้งเมื่อมีการอัปเดต
+// 2. Activate Event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => {
@@ -34,15 +34,22 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 3. Fetch Event: ดึงข้อมูลจาก Cache ก่อน ถ้าไม่มีค่อยไปโหลดจากเน็ต
+// 3. Fetch Event
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
         if (response) {
-          return response; // เจอใน cache ส่งกลับเลย
+          return response;
         }
-        return fetch(event.request); // ไม่เจอ ไปโหลดใหม่
+        return fetch(event.request);
       })
   );
+});
+
+// 4. Message Event (เพิ่มใหม่): เพื่อรับคำสั่ง update จาก index.html
+self.addEventListener('message', (event) => {
+  if (event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });
