@@ -1,13 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Phak IDE Editor (PWA Guide)</title>
+    <title>Pfäk IDE Editor (Ace Edition)</title>
 
-<!-- PWA Manifest Link -->
-    <link rel="manifest" href="manifest.json">
-    
     <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -23,6 +20,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify-css.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify-html.min.js"></script>
+
+    <!-- 5. Ace Editor (Main + Tools + Emmet support if needed) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ext-language_tools.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ext-searchbox.min.js"></script>
     
     <style>
         /* Base Styles */
@@ -30,9 +32,6 @@
         ::-webkit-scrollbar-track { background: #1f2937; }
         ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
         
-        #line-numbers::-webkit-scrollbar { display: none; }
-        #line-numbers { -ms-overflow-style: none; scrollbar-width: none; }
-
         body { overscroll-behavior-y: none; }
 
         .sidebar-transition { transition: transform 0.3s ease-in-out; }
@@ -45,29 +44,30 @@
         /* Typography */
         :root {
             --editor-font-family: 'JetBrains Mono', monospace; 
-            --editor-font-size: 14px;
-            --editor-line-height: 24px;
-        }
-
-        .editor-dynamic-font {
-            font-family: var(--editor-font-family) !important;
-            font-size: var(--editor-font-size) !important;
-            line-height: var(--editor-line-height) !important;
-            transition: font-size 0.2s, line-height 0.2s;
-            font-variant-ligatures: none;
         }
 
         /* Editor Layout */
-        #line-numbers { padding-top: 1rem; padding-bottom: 5rem; width: 3.5rem; }
+        #editor-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
         #editor { 
-            background-color: transparent; color: #f3f4f6; caret-color: white; 
-            resize: none; outline: none; padding: 0.5rem; padding-top: 1rem; padding-bottom: 5rem; 
-            white-space: pre; width: 100%; 
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            font-family: var(--editor-font-family) !important;
         }
 
-        .wrap-enabled {
-            white-space: pre-wrap !important; word-wrap: break-word !important; overflow-x: hidden !important;
-        }
+        /* Ace Customization to match theme */
+        .ace_editor { font-family: 'JetBrains Mono', monospace !important; }
+        .ace_gutter { background: #1f2937 !important; color: #6b7280 !important; }
+        .ace_print-margin { display: none !important; }
+        .ace_search { background-color: #374151 !important; color: white !important; border: 1px solid #4b5563 !important; }
+        .ace_search_field { background-color: #1f2937 !important; color: white !important; }
 
         /* Console Log Styles */
         .log-entry { font-family: 'JetBrains Mono', monospace; font-size: 12px; border-bottom: 1px solid #374151; padding: 4px 8px; }
@@ -75,31 +75,23 @@
         .log-warn { color: #fcd34d; background-color: #422006; }
         .log-error { color: #fca5a5; background-color: #450a0a; }
 
-        /* Server & Push Styles */
-        .server-status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .status-offline { background-color: #ef4444; box-shadow: 0 0 5px #ef4444; }
-        .status-online { background-color: #22c55e; box-shadow: 0 0 8px #22c55e; animation: pulse 2s infinite; }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        /* Simple Toast */
+        #toast-msg {
+            position: fixed; 
+            top: 20px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px); 
+            color: white; 
+            border-radius: 12px;
+            padding: 12px 16px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
+            z-index: 100;
+            border: 1px solid #444;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
         }
-
-        /* Mock Notification */
-        .mock-notification {
-            position: fixed; top: -100px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 400px; background: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(10px); color: white; border-radius: 12px;
-            padding: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100;
-            display: flex; gap: 12px; align-items: center; border: 1px solid #444;
-            transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        .mock-notification.show { top: 20px; }
-        .notif-icon { width: 40px; height: 40px; background: #2563eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
-        .notif-content { flex: 1; }
-        .notif-title { font-weight: bold; font-size: 14px; margin-bottom: 2px; }
-        .notif-body { font-size: 12px; color: #aaa; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 h-[100dvh] w-full flex flex-col overflow-hidden font-sans supports-[height:100dvh]:h-[100dvh] supports-[not(height:100dvh)]:h-screen">
@@ -110,41 +102,18 @@
             <button onclick="toggleSidebar()" class="p-2 rounded hover:bg-gray-700 active:bg-gray-600 focus:outline-none transition">
                 <i class="fas fa-bars text-xl"></i>
             </button>
-            <h1 class="text-lg font-bold truncate max-w-[150px]" id="doc-title">เอกสารใหม่.txt</h1>
+            <h1 class="text-lg font-bold truncate max-w-[150px]" id="doc-title">เอกสารใหม่.html</h1>
         </div>
         <div class="flex items-center gap-2">
-            <!-- NEW: Guide Button -->
-            <button onclick="openPWAGuide()" class="p-2 rounded hover:bg-gray-700 text-yellow-400">
-                <i class="fas fa-book-open text-lg"></i>
-            </button>
-            
-            <button onclick="toggleSearch()" class="p-2 rounded hover:bg-gray-700 text-blue-400">
-                <i class="fas fa-search text-lg"></i>
-            </button>
             <div class="text-xs text-gray-400 hidden sm:block" id="line-count-display">0 บรรทัด</div>
         </div>
     </nav>
 
     <div class="h-16 shrink-0"></div>
 
-    <!-- Search Panel -->
-    <div id="search-panel" class="hidden bg-gray-800 border-b border-gray-700 p-2 flex flex-col gap-2 shrink-0 z-10">
-        <div class="flex gap-2">
-            <input type="text" id="find-input" placeholder="ค้นหา..." class="w-full bg-gray-700 text-white px-3 py-2 rounded focus:outline-none text-sm font-[family-name:var(--editor-font-family)]">
-            <button onclick="findNext()" class="bg-blue-600 px-4 py-2 rounded text-sm whitespace-nowrap">ถัดไป</button>
-        </div>
-        <div class="flex gap-2">
-            <input type="text" id="replace-input" placeholder="แทนที่..." class="w-full bg-gray-700 text-white px-3 py-2 rounded focus:outline-none text-sm font-[family-name:var(--editor-font-family)]">
-            <button onclick="replaceCurrent()" class="bg-green-600 px-3 py-2 rounded text-sm whitespace-nowrap">แทนที่</button>
-            <button onclick="replaceAll()" class="bg-green-800 px-3 py-2 rounded text-sm whitespace-nowrap">ทั้งหมด</button>
-        </div>
-        <div class="text-xs text-gray-400 text-right px-1" id="search-status">พร้อมค้นหา</div>
-    </div>
-
-    <!-- Main Editor Area -->
+    <!-- Main Editor Area (Modified for ACE) -->
     <div class="flex flex-1 relative overflow-hidden" id="editor-wrapper">
-        <textarea id="line-numbers" readonly class="editor-dynamic-font bg-gray-800 text-gray-500 text-right pr-2 resize-none border-r border-gray-700 focus:outline-none select-none overflow-hidden z-20" spellcheck="false"></textarea>
-        <textarea id="editor" class="editor-dynamic-font bg-gray-900" placeholder="เริ่มพิมพ์..." spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+        <div id="editor"></div>
     </div>
 
     <!-- FAB -->
@@ -162,35 +131,6 @@
         </div>
         <div class="flex-1 overflow-y-auto p-2 space-y-2">
             
-             <!-- PWA Tools -->
-             <div class="bg-gray-700 rounded-lg p-2 mb-2">
-                <div class="text-xs text-gray-400 mb-2 font-bold uppercase">เครื่องมือ PWA</div>
-                
-                <button onclick="convertToPWA()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-orange-300 text-left mb-1">
-                    <i class="fas fa-mobile-alt w-6 text-center"></i> <span>แปลงเป็น PWA (Inject)</span>
-                </button>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <button onclick="downloadManifest()" class="flex items-center justify-center gap-2 p-2 rounded hover:bg-gray-600 text-white text-xs bg-gray-800 border border-gray-600">
-                        <i class="fas fa-file-code"></i> Manifest
-                    </button>
-                    <button onclick="downloadSW()" class="flex items-center justify-center gap-2 p-2 rounded hover:bg-gray-600 text-white text-xs bg-gray-800 border border-gray-600">
-                        <i class="fas fa-cogs"></i> SW.js
-                    </button>
-                </div>
-            </div>
-
-            <!-- Server Tools -->
-            <div class="bg-gray-700 rounded-lg p-2 mb-2">
-                <div class="text-xs text-gray-400 mb-2 font-bold uppercase">เซิร์ฟเวอร์ & Push</div>
-                <button onclick="openServerPanel()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-yellow-300 text-left mb-1">
-                    <i class="fas fa-server w-6 text-center"></i> <span>จำลอง Server / Push</span>
-                </button>
-                <div id="server-status-indicator" class="px-2 py-1 text-xs text-gray-400 flex items-center">
-                    <span class="server-status-dot status-offline"></span> สถานะ: ออฟไลน์
-                </div>
-            </div>
-
             <!-- View Settings -->
             <div class="bg-gray-700 rounded-lg p-2 mb-2">
                 <div class="text-xs text-gray-400 mb-2 font-bold uppercase">ขนาดตัวอักษร</div>
@@ -210,7 +150,7 @@
                     <i class="fas fa-magic w-6 text-center"></i> <span>จัดรูปแบบอัตโนมัติ</span>
                 </button>
                 <button onclick="openInBrowser()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-purple-300 text-left">
-                    <i class="fas fa-external-link-alt w-6 text-center"></i> <span>เปิด Tab ใหม่ (Legacy)</span>
+                    <i class="fas fa-external-link-alt w-6 text-center"></i> <span>เปิด Tab ใหม่</span>
                 </button>
             </div>
 
@@ -223,7 +163,8 @@
                     <i class="fas fa-align-left w-6 text-center"></i> <span id="label-wrap">ตัดคำอัตโนมัติ: ปิด</span>
                 </button>
             </div>
-             <div class="bg-gray-700 rounded-lg p-2 mb-2">
+            
+            <div class="bg-gray-700 rounded-lg p-2 mb-2">
                 <div class="text-xs text-gray-400 mb-2 font-bold uppercase">การนำทาง</div>
                 <button onclick="scrollToTop()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-yellow-300 text-left mb-1">
                     <i class="fas fa-arrow-up w-6 text-center"></i> <span>ไปบรรทัดแรก</span>
@@ -232,6 +173,7 @@
                     <i class="fas fa-arrow-down w-6 text-center"></i> <span>ไปบรรทัดสุดท้าย</span>
                 </button>
             </div>
+            
             <div class="bg-gray-700 rounded-lg p-2">
                 <div class="text-xs text-gray-400 mb-2 font-bold uppercase">จัดการไฟล์</div>
                 <button onclick="newFile()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-white text-left mb-1">
@@ -253,14 +195,14 @@
                 <div id="stat-mode" class="mt-2 text-blue-400 font-bold transition-colors duration-300">สถานะ: แก้ไขได้</div>
             </div>
         </div>
-        <div class="p-4 border-t border-gray-700 text-xs text-gray-500 text-center bg-gray-900">Text Master Mobile v17.0</div>
+        <div class="p-4 border-t border-gray-700 text-xs text-gray-500 text-center bg-gray-900">Text Master Mobile v18.0 Ace</div>
     </div>
 
     <!-- PREVIEW OVERLAY -->
     <div id="preview-overlay" class="fixed inset-0 bg-gray-900 z-50 flex flex-col hidden">
         <div class="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
             <h2 class="text-white font-bold flex items-center gap-2 text-sm sm:text-base">
-                <i class="fas fa-globe-asia text-cyan-400"></i> Localhost (Simulated)
+                <i class="fas fa-globe-asia text-cyan-400"></i> Local Preview
             </h2>
             <div class="flex gap-2">
                 <button onclick="toggleConsole()" id="btn-toggle-console" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-white text-xs flex items-center gap-1 border border-gray-600">
@@ -286,152 +228,48 @@
         </div>
     </div>
 
-    <!-- SERVER CONTROL PANEL OVERLAY -->
-    <div id="server-panel" class="fixed inset-0 bg-gray-900 z-[60] flex flex-col hidden">
-        <div class="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
-            <h2 class="text-white font-bold flex items-center gap-2 text-lg">
-                <i class="fas fa-server text-yellow-300"></i> Virtual Server Controller
-            </h2>
-            <button onclick="closeServerPanel()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        
-        <div class="flex-1 overflow-y-auto p-4 space-y-4">
-            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-gray-300 font-bold">สถานะเซิร์ฟเวอร์ (จำลอง)</h3>
-                    <div id="server-status-text" class="text-red-400 font-mono text-sm flex items-center">
-                        <span class="server-status-dot status-offline mr-2"></span> OFFLINE
-                    </div>
-                </div>
-                <button onclick="toggleServer()" id="btn-toggle-server" class="w-full py-3 rounded-lg font-bold text-white bg-green-600 hover:bg-green-500 transition shadow-lg">
-                    <i class="fas fa-power-off mr-2"></i> เริ่มเซิร์ฟเวอร์ (Start)
-                </button>
-            </div>
-
-            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700 opacity-50 pointer-events-none transition" id="push-controls">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-blue-300 font-bold"><i class="fas fa-bell mr-2"></i> Push Notification Tester</h3>
-                </div>
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between bg-gray-900 p-2 rounded border border-gray-700">
-                        <span class="text-sm text-gray-400">สิทธิ์การแจ้งเตือน: <span id="perm-status" class="text-yellow-500">รอตรวจสอบ</span></span>
-                        <button onclick="requestPushPermission()" class="px-3 py-1 bg-blue-600 rounded text-xs text-white">ขอสิทธิ์</button>
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-400">หัวข้อ (Title)</label>
-                        <input type="text" id="push-title" value="Hello World!" class="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm mt-1">
-                    </div>
-                    <div>
-                        <label class="text-xs text-gray-400">ข้อความ (Body)</label>
-                        <input type="text" id="push-body" value="นี่คือการทดสอบแจ้งเตือนจาก Server จำลอง" class="w-full bg-gray-900 text-white border border-gray-600 rounded px-3 py-2 text-sm mt-1">
-                    </div>
-                    <button onclick="sendPushNotification()" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-bold mt-2">
-                        <i class="fas fa-paper-plane mr-2"></i> ส่งแจ้งเตือน (Send Push)
-                    </button>
-                </div>
-            </div>
-            <div class="bg-black rounded-lg p-3 border border-gray-700 font-mono text-xs text-green-400 h-40 overflow-y-auto" id="server-logs">
-                <div class="opacity-50">> รอเริ่มการทำงาน...</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- PWA GUIDE MODAL (NEW) -->
-    <div id="pwa-guide-modal" class="fixed inset-0 bg-gray-900 z-[70] flex flex-col hidden">
-        <div class="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shrink-0">
-            <h2 class="text-white font-bold flex items-center gap-2 text-lg">
-                <i class="fas fa-book-open text-yellow-400"></i> คู่มือการสร้าง PWA
-            </h2>
-            <button onclick="closePWAGuide()" class="text-gray-400 hover:text-white"><i class="fas fa-times text-xl"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-4 text-gray-300 space-y-6">
-            
-            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h3 class="text-white font-bold text-lg mb-2"><i class="fas fa-file-code text-blue-400 mr-2"></i>ขั้นตอนที่ 1: เตรียมไฟล์</h3>
-                <p class="text-sm mb-2">ในการสร้าง PWA คุณต้องมี 3 ไฟล์หลัก (สร้างได้จากเมนู "เครื่องมือ PWA" ในแถบด้านข้าง):</p>
-                <ul class="list-disc list-inside text-sm space-y-1 ml-2 text-gray-400">
-                    <li><strong class="text-green-400">index_pwa.html</strong>: หน้าเว็บหลักที่ฝังโค้ดเรียบร้อยแล้ว</li>
-                    <li><strong class="text-green-400">manifest.json</strong>: ไฟล์ตั้งค่าชื่อแอป ไอคอน สีธีม</li>
-                    <li><strong class="text-green-400">sw.js</strong>: ไฟล์ Service Worker สำหรับจัดการ Cache (ให้แอปทำงานออฟไลน์ได้)</li>
-                </ul>
-            </div>
-
-            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h3 class="text-white font-bold text-lg mb-2"><i class="fas fa-edit text-orange-400 mr-2"></i>ขั้นตอนที่ 2: การแก้ไขไฟล์</h3>
-                
-                <h4 class="text-white font-bold text-sm mt-3 mb-1">1. แก้ไข manifest.json</h4>
-                <p class="text-xs text-gray-400 mb-2">เปิดไฟล์ manifest.json ใน Editor แล้วแก้ไขค่าเหล่านี้:</p>
-                <div class="bg-gray-900 p-2 rounded text-xs font-mono text-green-300 mb-2">
-                    "name": "ชื่อแอปเต็ม",<br>
-                    "short_name": "ชื่อย่อ",<br>
-                    "theme_color": "#สีธีม"
-                </div>
-
-                <h4 class="text-white font-bold text-sm mt-3 mb-1">2. แก้ไข sw.js (ขั้นสูง)</h4>
-                <p class="text-xs text-gray-400 mb-2">หากคุณมีไฟล์รูปภาพหรือ CSS แยก ต้องเพิ่มชื่อไฟล์ลงในรายการ Cache:</p>
-                <div class="bg-gray-900 p-2 rounded text-xs font-mono text-green-300 mb-2">
-                    const urlsToCache = [<br>
-                    &nbsp;&nbsp;'index_pwa.html',<br>
-                    &nbsp;&nbsp;'manifest.json',<br>
-                    &nbsp;&nbsp;'style.css', <span class="text-gray-500">// เพิ่มไฟล์อื่นๆ ที่นี่</span><br>
-                    &nbsp;&nbsp;'image.png'<br>
-                    ];
-                </div>
-            </div>
-
-            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h3 class="text-white font-bold text-lg mb-2"><i class="fas fa-cloud-upload-alt text-purple-400 mr-2"></i>ขั้นตอนที่ 3: อัปโหลดขึ้น Server</h3>
-                <p class="text-sm mb-2">PWA จะทำงานได้สมบูรณ์ต้องอยู่บน <strong>HTTPS</strong> เท่านั้น</p>
-                <ul class="list-disc list-inside text-sm space-y-1 ml-2 text-gray-400">
-                    <li>นำทั้ง 3 ไฟล์ไปวางใน Folder เดียวกัน</li>
-                    <li>อัปโหลดขึ้น Host ฟรี เช่น <strong>GitHub Pages, Netlify, Vercel</strong></li>
-                    <li><span class="text-red-400">คำเตือน:</span> หากเปิดไฟล์โดยตรงในเครื่อง (file://) PWA จะไม่ทำงาน</li>
-                </ul>
-            </div>
-
-            <div class="bg-gray-800 rounded-lg p-4 border border-gray-700">
-                <h3 class="text-white font-bold text-lg mb-2"><i class="fas fa-download text-cyan-400 mr-2"></i>ขั้นตอนที่ 4: การติดตั้งลงมือถือ</h3>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-                    <div class="bg-gray-900 p-3 rounded">
-                        <h4 class="text-green-400 font-bold mb-1"><i class="fab fa-android mr-1"></i> Android (Chrome)</h4>
-                        <ol class="list-decimal list-inside text-xs text-gray-400 space-y-1">
-                            <li>เปิดเว็บที่อัปโหลดแล้วใน Chrome</li>
-                            <li>แตะเมนู 3 จุด มุมขวาบน</li>
-                            <li>เลือก <strong>"Add to Home screen"</strong> (เพิ่มลงในหน้าจอหลัก)</li>
-                            <li>หรือรอแถบแจ้งเตือนด้านล่างเด้งขึ้นมา</li>
-                        </ol>
-                    </div>
-                    <div class="bg-gray-900 p-3 rounded">
-                        <h4 class="text-gray-200 font-bold mb-1"><i class="fab fa-apple mr-1"></i> iOS (Safari)</h4>
-                        <ol class="list-decimal list-inside text-xs text-gray-400 space-y-1">
-                            <li>เปิดเว็บใน Safari เท่านั้น</li>
-                            <li>แตะปุ่ม <strong>Share</strong> (สี่เหลี่ยมมีลูกศรชี้ขึ้น)</li>
-                            <li>เลื่อนหาเมนู <strong>"Add to Home Screen"</strong> (เพิ่มไปยังหน้าจอโฮม)</li>
-                            <li>กด Add (เพิ่ม)</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="h-10"></div> <!-- Spacer -->
-        </div>
-    </div>
-
-    <!-- MOCK NOTIFICATION ELEMENT (Fallback) -->
-    <div id="mock-notification" class="mock-notification">
-        <div class="notif-icon"><i class="fas fa-bell text-white"></i></div>
-        <div class="notif-content">
-            <div class="notif-title" id="mock-title">Notification Title</div>
-            <div class="notif-body" id="mock-body">Notification body content goes here...</div>
-        </div>
-        <button onclick="hideMockNotification()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-    </div>
+    <!-- Simple Toast -->
+    <div id="toast-msg" class="opacity-0"></div>
 
     <script>
+        // --- ACE EDITOR INITIALIZATION ---
+        // Setup Ace Editor
+        var aceEditor = ace.edit("editor");
+        aceEditor.setTheme("ace/theme/dracula");
+        aceEditor.session.setMode("ace/mode/html");
+        
+        // Editor Options for Mobile/Performance
+        aceEditor.setOptions({
+            fontSize: "14px",
+            fontFamily: "JetBrains Mono",
+            showPrintMargin: false,
+            showGutter: true,
+            highlightActiveLine: true,
+            wrap: false, // Default no wrap
+            useSoftTabs: true,
+            tabSize: 4,
+            displayIndentGuides: true,
+            scrollPastEnd: 0.5, // Allow scrolling past end
+        });
+
+        // Set Default Value
+        aceEditor.setValue(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello Ace</title>
+    <style>
+        body { background: #111; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
+        h1 { color: #4ade80; }
+    </style>
+</head>
+<body>
+    <h1>Hello World!</h1>
+</body>
+</html>`, -1); // -1 moves cursor to start
+
         // --- Core Variables ---
-        const editor = document.getElementById('editor');
-        const lineNumbers = document.getElementById('line-numbers');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
         const modeToast = document.getElementById('mode-toast');
@@ -440,25 +278,11 @@
         const btnLineNums = document.getElementById('btn-line-nums');
         const labelLineNums = document.getElementById('label-line-nums');
         const btnWrap = document.getElementById('btn-wrap');
+        const labelWrap = document.getElementById('label-wrap');
         const fontSizeLabel = document.getElementById('font-size-label');
         const statMode = document.getElementById('stat-mode');
         const docTitle = document.getElementById('doc-title');
-
-        // --- Server & Push Variables ---
-        const serverPanel = document.getElementById('server-panel');
-        const btnToggleServer = document.getElementById('btn-toggle-server');
-        const serverStatusText = document.getElementById('server-status-text');
-        const pushControls = document.getElementById('push-controls');
-        const serverLogs = document.getElementById('server-logs');
-        const permStatus = document.getElementById('perm-status');
-        const serverStatusIndicator = document.getElementById('server-status-indicator');
-        const mockNotif = document.getElementById('mock-notification');
-        
-        // --- NEW: PWA Guide Variables ---
-        const pwaGuideModal = document.getElementById('pwa-guide-modal');
-
-        let isServerRunning = false;
-        let pushPermission = Notification.permission;
+        const toastEl = document.getElementById('toast-msg');
 
         // --- Preview Variables ---
         const previewOverlay = document.getElementById('preview-overlay');
@@ -471,177 +295,32 @@
         let logCount = 0;
 
         let currentFileName = "index.html";
-        let lastLineCount = 0;
         let isReadOnly = false;
         let isLineNumsVisible = true;
         let isSoftWrap = false;
         let currentFontSize = 14;
 
-        // --- NEW: PWA Guide Functions ---
-        function openPWAGuide() {
-            pwaGuideModal.classList.remove('hidden');
-            if (!sidebar.classList.contains('-translate-x-full')) {
-                toggleSidebar(); // Close sidebar if open
-            }
+        // --- HELPER: Show Toast ---
+        function showToast(msg) {
+            toastEl.innerText = msg;
+            toastEl.classList.remove('opacity-0');
+            setTimeout(() => toastEl.classList.add('opacity-0'), 2500);
         }
-
-        function closePWAGuide() {
-            pwaGuideModal.classList.add('hidden');
-        }
-
-        // --- PWA FUNCTIONS ---
-
-        function convertToPWA() {
-            if (isReadOnly) { showToast("โหมดอ่าน: แก้ไขไม่ได้"); return; }
-            
-            let code = editor.value;
-            let changesMade = false;
-
-            if (!code.includes('manifest.json')) {
-                const manifestLink = '<link rel="manifest" href="manifest.json">';
-                if (code.includes('</head>')) {
-                    code = code.replace('</head>', `    ${manifestLink}\n</head>`);
-                    changesMade = true;
-                }
-            }
-
-            if (!code.includes('navigator.serviceWorker.register')) {
-                const swScript = `
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
-            });
-        }
-    <\/script>`;
-                if (code.includes('</body>')) {
-                    code = code.replace('</body>', `${swScript}\n</body>`);
-                    changesMade = true;
-                } else {
-                    code += swScript;
-                    changesMade = true;
-                }
-            }
-
-            if (changesMade) {
-                editor.value = code;
-                updateStats();
-                currentFileName = "index_pwa.html";
-                docTitle.innerText = currentFileName;
-                showToast("แปลงเป็น PWA เรียบร้อย");
-                toggleSidebar();
-            } else {
-                showToast("โค้ดนี้รองรับ PWA อยู่แล้ว");
-                toggleSidebar();
-            }
-        }
-
-        function downloadManifest() {
-            const manifest = {
-                "name": "Text Master PWA",
-                "short_name": "TextMaster",
-                "start_url": "index_pwa.html",
-                "display": "standalone",
-                "background_color": "#111827",
-                "theme_color": "#1f2937",
-                "icons": [
-                    {
-                        "src": "https://cdn-icons-png.flaticon.com/512/1827/1827349.png",
-                        "sizes": "192x192",
-                        "type": "image/png"
-                    },
-                    {
-                        "src": "https://cdn-icons-png.flaticon.com/512/1827/1827349.png",
-                        "sizes": "512x512",
-                        "type": "image/png"
-                    }
-                ]
-            };
-            const blob = new Blob([JSON.stringify(manifest, null, 2)], {type: "application/json"});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = "manifest.json";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            toggleSidebar();
-            showToast("ดาวน์โหลด manifest.json แล้ว");
-        }
-
-        function downloadSW() {
-            const swContent = `const CACHE_NAME = 'pwa-cache-v1';
-const urlsToCache = [
-  'index_pwa.html',
-  'manifest.json'
-];
-
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
-  );
-});
-
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => response || fetch(event.request))
-  );
-});`;
-            const blob = new Blob([swContent], {type: "text/javascript"});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = "sw.js";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            toggleSidebar();
-            showToast("ดาวน์โหลด sw.js แล้ว");
-        }
-
-
-        // --- SERVER & PUSH FUNCTIONS ---
-        function openServerPanel() { serverPanel.classList.remove('hidden'); toggleSidebar(); updatePermissionStatus(); }
-        function closeServerPanel() { serverPanel.classList.add('hidden'); }
-        function toggleServer() {
-            isServerRunning = !isServerRunning;
-            const dot = serverStatusIndicator.querySelector('.server-status-dot');
-            const statusText = document.querySelector('#server-status-indicator');
-            if (isServerRunning) {
-                btnToggleServer.classList.replace('bg-green-600', 'bg-red-600');
-                btnToggleServer.classList.replace('hover:bg-green-500', 'hover:bg-red-500');
-                btnToggleServer.innerHTML = '<i class="fas fa-stop mr-2"></i> หยุดเซิร์ฟเวอร์ (Stop)';
-                serverStatusText.innerHTML = '<span class="server-status-dot status-online mr-2"></span> ONLINE (Port: 8080 Mock)';
-                serverStatusText.classList.replace('text-red-400', 'text-green-400');
-                dot.classList.replace('status-offline', 'status-online');
-                statusText.innerHTML = '<span class="server-status-dot status-online"></span> สถานะ: ออนไลน์';
-                pushControls.classList.remove('opacity-50', 'pointer-events-none');
-                logServer("Server started at localhost:8080 (Virtual Environment)");
-                if (!window.isSecureContext) {
-                    logServer("WARNING: INSECURE context (http:// or file://). Native Push BLOCKED.");
-                    logServer("System will force 'In-App Fallback'.");
-                } else { logServer("Context is SECURE. Native Push available if granted."); }
-            } else {
-                btnToggleServer.classList.replace('bg-red-600', 'bg-green-600');
-                btnToggleServer.classList.replace('hover:bg-red-500', 'hover:bg-green-500');
-                btnToggleServer.innerHTML = '<i class="fas fa-power-off mr-2"></i> เริ่มเซิร์ฟเวอร์ (Start)';
-                serverStatusText.innerHTML = '<span class="server-status-dot status-offline mr-2"></span> OFFLINE';
-                serverStatusText.classList.replace('text-green-400', 'text-red-400');
-                dot.classList.replace('status-online', 'status-offline');
-                statusText.innerHTML = '<span class="server-status-dot status-offline"></span> สถานะ: ออฟไลน์';
-                pushControls.classList.add('opacity-50', 'pointer-events-none');
-                logServer("Server stopped.");
-            }
-        }
-        function logServer(msg) { const d=document.createElement('div'); d.innerText=`[${new Date().toLocaleTimeString('th-TH')}] ${msg}`; serverLogs.appendChild(d); serverLogs.scrollTop=serverLogs.scrollHeight; }
-        function updatePermissionStatus() { pushPermission=Notification.permission; if(pushPermission==='granted'){permStatus.innerText="อนุญาตแล้ว (Granted)";permStatus.className="text-green-400 font-bold";}else if(pushPermission==='denied'){permStatus.innerText="ถูกปิดกั้น (Denied)";permStatus.className="text-red-400 font-bold";}else{permStatus.innerText="ยังไม่ได้ขอ (Default)";permStatus.className="text-yellow-500";} }
-        function requestPushPermission() { if(!window.isSecureContext){logServer("Error: Insecure context. Using Mock Fallback only.");alert("Browser ไม่ยอมให้ขอสิทธิ์ในหน้านี้ (Insecure Context)\nระบบจะใช้การแจ้งเตือนจำลองแทนครับ");return;} Notification.requestPermission().then(p=>{pushPermission=p;updatePermissionStatus();logServer(`Permission request result: ${p}`);if(p==='granted')new Notification("Text Master Mobile",{body:"ขอบคุณที่อนุญาตการแจ้งเตือน!"});}); }
-        function sendPushNotification() { if(!isServerRunning)return; const t=document.getElementById('push-title').value; const b=document.getElementById('push-body').value; logServer(`Sending Push: "${t}"`); if(window.isSecureContext&&Notification.permission==='granted'){try{new Notification(t,{body:b,icon:'https://cdn-icons-png.flaticon.com/512/1827/1827349.png'});logServer("Native Notification Sent.");}catch(e){logServer("Native Failed. Using Fallback.");showMockNotification(t,b);}}else{showMockNotification(t,b);} }
-        function showMockNotification(t,b) { document.getElementById('mock-title').innerText=t; document.getElementById('mock-body').innerText=b; mockNotif.classList.add('show'); setTimeout(()=>{hideMockNotification();},4000); }
-        function hideMockNotification() { mockNotif.classList.remove('show'); }
 
         // --- PREVIEW & CONSOLE FUNCTIONS ---
-        function runLocalPreview() { previewOverlay.classList.remove('hidden'); toggleSidebar(); document.getElementById('console-logs').innerHTML='<div class="text-gray-500 italic text-center mt-4">ไม่มี Log (พร้อมทำงาน)</div>'; document.getElementById('log-count').innerText='0'; logCount=0; const c=editor.value; const i=`<script>(function(){function s(t,a){try{window.parent.postMessage({s:'pc',t:t,m:a.map(x=>(typeof x=='object'?JSON.stringify(x):String(x))).join(' ')},'*')}catch(e){}}const ol=console.log,ow=console.warn,oe=console.error;console.log=(...a)=>{s('i',a);ol.apply(console,a)};console.warn=(...a)=>{s('w',a);ow.apply(console,a)};console.error=(...a)=>{s('e',a);oe.apply(console,a)};window.onerror=(m,u,l,c,e)=>{s('e',[\`Uncaught: \${m} (Line:\${l})\`]);return false;};})();<\/script>`; let h=c.includes('<head>')?c.replace('<head>','<head>'+i):i+c; previewFrame.src=URL.createObjectURL(new Blob([h],{type:'text/html'})); }
+        function runLocalPreview() { 
+            previewOverlay.classList.remove('hidden'); 
+            toggleSidebar(); 
+            document.getElementById('console-logs').innerHTML='<div class="text-gray-500 italic text-center mt-4">ไม่มี Log (พร้อมทำงาน)</div>'; 
+            document.getElementById('log-count').innerText='0'; 
+            logCount=0; 
+            
+            const c = aceEditor.getValue(); // Get content from Ace
+            const i=`<script>(function(){function s(t,a){try{window.parent.postMessage({s:'pc',t:t,m:a.map(x=>(typeof x=='object'?JSON.stringify(x):String(x))).join(' ')},'*')}catch(e){}}const ol=console.log,ow=console.warn,oe=console.error;console.log=(...a)=>{s('i',a);ol.apply(console,a)};console.warn=(...a)=>{s('w',a);ow.apply(console,a)};console.error=(...a)=>{s('e',a);oe.apply(console,a)};window.onerror=(m,u,l,c,e)=>{s('e',[\`Uncaught: \${m} (Line:\${l})\`]);return false;};})();<\/script>`; 
+            let h=c.includes('<head>')?c.replace('<head>','<head>'+i):i+c; 
+            previewFrame.src=URL.createObjectURL(new Blob([h],{type:'text/html'})); 
+        }
+
         window.addEventListener('message', e=>{if(e.data&&e.data.s==='pc')addLogEntry(e.data.t==='i'?'info':(e.data.t==='w'?'warn':'error'),e.data.m);});
         function addLogEntry(t,m) { if(logCount===0)document.getElementById('console-logs').innerHTML=''; logCount++; document.getElementById('log-count').innerText=logCount; const d=document.createElement('div'); d.className=`log-entry log-${t}`; const tm=new Date().toLocaleTimeString('th-TH',{hour12:false}); const ic=t==='error'?'<i class="fas fa-times-circle mr-1"></i>':(t==='warn'?'<i class="fas fa-exclamation-triangle mr-1"></i>':'<i class="fas fa-info-circle mr-1"></i>'); d.innerHTML=`<span class="opacity-50 mr-2">[${tm}]</span>${ic} ${m.replace(/</g,'&lt;')}`; document.getElementById('console-logs').appendChild(d); document.getElementById('console-logs').scrollTop=document.getElementById('console-logs').scrollHeight; }
         function closePreview() { previewOverlay.classList.add('hidden'); previewFrame.src=""; }
@@ -649,37 +328,131 @@ self.addEventListener('fetch', event => {
         function clearConsole() { document.getElementById('console-logs').innerHTML='<div class="text-gray-500 italic text-center mt-4">ไม่มี Log (พร้อมทำงาน)</div>'; logCount=0; document.getElementById('log-count').innerText='0'; }
 
         // --- UI FUNCTIONS ---
-        editor.addEventListener('input', updateStats);
-        editor.addEventListener('scroll', () => lineNumbers.scrollTop = editor.scrollTop);
+        // Stats Listener with Ace
+        aceEditor.session.on('change', updateStats);
+        
         function toggleSidebar() { sidebar.classList.toggle('-translate-x-full'); overlay.classList.toggle('hidden'); fabBtn.classList.toggle('fab-hidden', !sidebar.classList.contains('-translate-x-full')); }
-        function openInBrowser() { window.open(URL.createObjectURL(new Blob([editor.value], {type:'text/html'})), '_blank'); toggleSidebar(); }
-        function newFile() { if(editor.value.trim()&&!confirm("ข้อมูลหาย?"))return; editor.value=""; updateStats(); toggleSidebar(); }
-        function toggleReadMode() { isReadOnly=!isReadOnly; editor.readOnly=isReadOnly; fabIcon.className=isReadOnly?"fas fa-pen":"fas fa-eye"; fabBtn.classList.toggle('bg-blue-600'); fabBtn.classList.toggle('bg-gray-600'); modeToast.innerText=isReadOnly?"โหมดอ่าน":"โหมดแก้ไข"; modeToast.classList.remove('opacity-0'); setTimeout(()=>modeToast.classList.add('opacity-0'),2000); if(isReadOnly){statMode.innerText="สถานะ: อ่านอย่างเดียว";statMode.className="mt-2 text-gray-400 font-bold transition-colors duration-300";}else{statMode.innerText="สถานะ: แก้ไขได้";statMode.className="mt-2 text-blue-400 font-bold transition-colors duration-300";} editor.blur(); }
-        function updateStats() { const l=editor.value.split('\n'); document.getElementById('stat-lines').innerText=`บรรทัด: ${l.length}`; document.getElementById('line-count-display').innerText=`${l.length} บรรทัด`; document.getElementById('stat-chars').innerText=`ตัวอักษร: ${editor.value.length}`; if(l.length!==lastLineCount){lineNumbers.value=Array.from({length:l.length},(_,i)=>i+1).join('\n'); lastLineCount=l.length;} }
-        function saveFile() { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([editor.value],{type:'text/plain'})); a.download=currentFileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); toggleSidebar(); }
-        function loadFile(i) { const f=i.files[0]; if(!f)return; editor.value="Loading..."; const r=new FileReader(); r.onload=e=>{editor.value=e.target.result; updateStats(); editor.scrollTop=0;}; r.readAsText(f); toggleSidebar(); i.value=''; }
-        function toggleSearch() { document.getElementById('search-panel').classList.toggle('hidden'); }
-        function toggleLineNumbersExplicit() { isLineNumsVisible=!isLineNumsVisible; lineNumbers.classList.toggle('hidden-force'); btnLineNums.classList.toggle('text-blue-300'); toggleSidebar(); }
-        function toggleSoftWrap() { isSoftWrap=!isSoftWrap; editor.classList.toggle('wrap-enabled'); if(isSoftWrap && isLineNumsVisible) toggleLineNumbersExplicit(); btnWrap.classList.toggle('text-blue-300'); toggleSidebar(); }
-        function adjustFontSize(d) { let n=currentFontSize+d; if(n>=10&&n<=32){currentFontSize=n; document.documentElement.style.setProperty('--editor-font-size',`${n}px`); document.documentElement.style.setProperty('--editor-line-height',`${Math.round(n*1.7)}px`); document.getElementById('font-size-label').innerText=`${n}px`;} }
-        function formatCode() { if(isReadOnly)return; const o={indent_size:2}; let c=editor.value; if(c.includes('<html')) c=html_beautify(c,o); else if(c.includes('{')) c=css_beautify(c,o); editor.value=c; updateStats(); toggleSidebar(); }
-        function scrollToTop() { editor.scrollTop=0; toggleSidebar(); }
-        function scrollToBottom() { editor.scrollTop=editor.scrollHeight; toggleSidebar(); }
-        function findNext() { const s=document.getElementById('find-input').value; if(!s)return; let i=editor.value.indexOf(s,editor.selectionEnd); if(i===-1)i=editor.value.indexOf(s,0); if(i!==-1){editor.focus(); editor.setSelectionRange(i,i+s.length);} }
-        function replaceCurrent() { if(isReadOnly)return; const f=document.getElementById('find-input').value; if(editor.value.substring(editor.selectionStart,editor.selectionEnd)===f){editor.setRangeText(document.getElementById('replace-input').value,editor.selectionStart,editor.selectionEnd,'select'); updateStats();} findNext(); }
-        function replaceAll() { if(isReadOnly)return; const f=document.getElementById('find-input').value; if(!f)return; editor.value=editor.value.replaceAll(f,document.getElementById('replace-input').value); updateStats(); }
+        
+        function openInBrowser() { 
+            window.open(URL.createObjectURL(new Blob([aceEditor.getValue()], {type:'text/html'})), '_blank'); 
+            toggleSidebar(); 
+        }
+        
+        function newFile() { 
+            if(aceEditor.getValue().trim() && !confirm("ข้อมูลหาย?")) return; 
+            aceEditor.setValue(""); 
+            docTitle.innerText = "เอกสารใหม่.html";
+            toggleSidebar(); 
+        }
 
+        function toggleReadMode() { 
+            isReadOnly = !isReadOnly; 
+            aceEditor.setReadOnly(isReadOnly);
+            // Visual Updates
+            fabIcon.className = isReadOnly ? "fas fa-pen" : "fas fa-eye"; 
+            fabBtn.classList.toggle('bg-blue-600'); 
+            fabBtn.classList.toggle('bg-gray-600'); 
+            modeToast.innerText = isReadOnly ? "โหมดอ่าน" : "โหมดแก้ไข"; 
+            modeToast.classList.remove('opacity-0'); 
+            setTimeout(()=>modeToast.classList.add('opacity-0'),2000); 
+            
+            if(isReadOnly){
+                statMode.innerText="สถานะ: อ่านอย่างเดียว";
+                statMode.className="mt-2 text-gray-400 font-bold transition-colors duration-300";
+                aceEditor.renderer.setStyle("disabled", true);
+            } else {
+                statMode.innerText="สถานะ: แก้ไขได้";
+                statMode.className="mt-2 text-blue-400 font-bold transition-colors duration-300";
+                aceEditor.renderer.setStyle("disabled", false);
+            }
+            if(!isReadOnly) aceEditor.focus();
+        }
+
+        function updateStats() { 
+            const val = aceEditor.getValue();
+            const lines = aceEditor.session.getLength();
+            document.getElementById('stat-lines').innerText = `บรรทัด: ${lines}`; 
+            document.getElementById('line-count-display').innerText = `${lines} บรรทัด`; 
+            document.getElementById('stat-chars').innerText = `ตัวอักษร: ${val.length}`; 
+        }
+
+        function saveFile() { 
+            const a=document.createElement('a'); 
+            a.href=URL.createObjectURL(new Blob([aceEditor.getValue()],{type:'text/plain'})); 
+            a.download=currentFileName; 
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); 
+            toggleSidebar(); 
+        }
+
+        function loadFile(i) { 
+            const f=i.files[0]; 
+            if(!f)return; 
+            const r=new FileReader(); 
+            r.onload=e=>{
+                aceEditor.setValue(e.target.result, -1);
+                currentFileName = f.name;
+                docTitle.innerText = f.name;
+                
+                // Auto Detect Mode (Simple)
+                if(f.name.endsWith('.js')) aceEditor.session.setMode("ace/mode/javascript");
+                else if(f.name.endsWith('.css')) aceEditor.session.setMode("ace/mode/css");
+                else aceEditor.session.setMode("ace/mode/html");
+                
+                updateStats(); 
+            }; 
+            r.readAsText(f); 
+            toggleSidebar(); 
+            i.value=''; 
+        }
+
+        // --- Editor Settings Logic Mapping ---
+        function toggleLineNumbersExplicit() { 
+            isLineNumsVisible = !isLineNumsVisible; 
+            aceEditor.renderer.setShowGutter(isLineNumsVisible);
+            
+            btnLineNums.classList.toggle('text-blue-300'); 
+            labelLineNums.innerText = isLineNumsVisible ? "เลขบรรทัด: แสดง" : "เลขบรรทัด: ซ่อน";
+            toggleSidebar(); 
+        }
+        
+        function toggleSoftWrap() { 
+            isSoftWrap = !isSoftWrap; 
+            aceEditor.session.setUseWrapMode(isSoftWrap);
+            
+            btnWrap.classList.toggle('text-blue-300'); 
+            labelWrap.innerText = isSoftWrap ? "ตัดคำอัตโนมัติ: เปิด" : "ตัดคำอัตโนมัติ: ปิด";
+            toggleSidebar(); 
+        }
+
+        function adjustFontSize(d) { 
+            let n = currentFontSize + d; 
+            if(n>=10 && n<=32){
+                currentFontSize = n; 
+                aceEditor.setFontSize(n + "px");
+                document.getElementById('font-size-label').innerText=`${n}px`;
+            } 
+        }
+
+        function formatCode() { 
+            if(isReadOnly)return; 
+            const o={indent_size:4}; 
+            let c = aceEditor.getValue(); 
+            // Detect based on content
+            if(c.includes('<html') || c.trim().startsWith('<!DOCTYPE')) c = html_beautify(c,o); 
+            else if(c.includes('{') && !c.includes('<')) c = css_beautify(c,o); // Rough guess
+            else if(c.includes('function') || c.includes('const ')) c = js_beautify(c,o);
+            else c = html_beautify(c,o); // Fallback
+
+            aceEditor.setValue(c, -1);
+            toggleSidebar(); 
+        }
+
+        function scrollToTop() { aceEditor.scrollToLine(0, true, true, function(){}); toggleSidebar(); }
+        function scrollToBottom() { aceEditor.scrollToLine(aceEditor.session.getLength(), true, true, function(){}); toggleSidebar(); }
+
+        // Init
         updateStats();
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker registered!', reg))
-            .catch(err => console.log('Service Worker registration failed: ', err));
-    });
-}
 
     </script>
 </body>
 </html>
-

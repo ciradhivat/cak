@@ -1,4 +1,4 @@
-const CACHE_NAME = 'phak-ide-v2'; // อัปเดตเวอร์ชัน cache
+const CACHE_NAME = 'pfäk-ide-v3'; // อัปเดตเวอร์ชัน cache
 const urlsToCache = [
   './',
   './index.html',

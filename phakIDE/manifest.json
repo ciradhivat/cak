@@ -1,6 +1,6 @@
 {
-  "name": "phak IDE PWA",
-  "short_name": "ผักบันทึกโค้ด",
+  "name": "pfäk IDE PWA",
+  "short_name": "ผักโค้ด",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#111827",
