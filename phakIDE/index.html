@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
@@ -365,7 +365,12 @@
             <span class="status" id="save-status">● Ready</span>
         </div>
         <div class="toolbar-actions">
-            <!-- New: Toggle Mode Button -->
+            <!-- NEW: Toggle Gutter Button -->
+            <button class="btn-icon" id="btn-toggle-gutter" onclick="toggleGutter()" title="Show/Hide Line Numbers">
+                <svg viewBox="0 0 24 24"><path d="M3 5h2v14H3V5zm4 0h14v2H7V5zm0 4h14v2H7V9zm0 4h14v2H7v-2zm0 4h14v2H7v-2z"/></svg>
+            </button>
+
+            <!-- Toggle Mode Button -->
             <button class="btn-icon" id="btn-toggle-mode" onclick="toggleEditorMode()" title="Switch Text/Code Mode (Fix Thai)">
                 <!-- Icon Text 'T' -->
                 <svg viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4z"/></svg>
@@ -437,11 +442,13 @@
     <script>
         let aceEditor = null;
         let isSimpleMode = false;
-        let isReadOnlyMode = false; // New State
+        let isReadOnlyMode = false;
+        let isGutterVisible = true; // NEW: Track gutter state
         
         const simpleEditor = document.getElementById('simple-editor');
         const aceContainer = document.getElementById('ace-container');
         const btnToggle = document.getElementById('btn-toggle-mode');
+        const btnGutter = document.getElementById('btn-toggle-gutter');
         const fontSizeIndicator = document.getElementById('font-size-indicator');
         const fabBtn = document.getElementById('fab-read-mode');
         const fabIcon = document.getElementById('fab-icon');
@@ -508,6 +515,28 @@
             loader.style.display = 'none';
         }
 
+        // ============================================
+        // ✨ NEW: Toggle Gutter (Line Numbers & Fold Gutter)
+        // ============================================
+        function toggleGutter() {
+            if (isSimpleMode) {
+                alert("กรุณาเปลี่ยนกลับไปโหมด Code Editor ก่อนเพื่อแสดง/ซ่อน Line Numbers");
+                return;
+            }
+
+            isGutterVisible = !isGutterVisible;
+            
+            // Toggle Ace Gutter
+            aceEditor.renderer.setShowGutter(isGutterVisible);
+            
+            // Update button visual state
+            if (isGutterVisible) {
+                btnGutter.classList.remove('active-mode');
+            } else {
+                btnGutter.classList.add('active-mode');
+            }
+        }
+
         // Toggle Function (Core Logic)
         function toggleEditorMode() {
             isSimpleMode = !isSimpleMode;
@@ -530,7 +559,7 @@
             }
         }
 
-        // --- NEW: Toggle Read-Only Mode ---
+        // --- Toggle Read-Only Mode ---
         function toggleReadMode() {
             isReadOnlyMode = !isReadOnlyMode;
 
@@ -544,13 +573,13 @@
                 // Switch Icon to "Pencil" (Edit)
                 fabIcon.innerHTML = '<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>';
                 fabBtn.classList.add('reading-mode');
-                fabBtn.style.backgroundColor = '#555'; // Grey for Read Mode
+                fabBtn.style.backgroundColor = '#555';
                 statusEl.innerText = '● Read Only';
             } else {
                 // Switch Icon to "Eye" (Read)
                 fabIcon.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
                 fabBtn.classList.remove('reading-mode');
-                fabBtn.style.backgroundColor = ''; // Revert to accent color
+                fabBtn.style.backgroundColor = '';
                 statusEl.innerText = '● Ready';
             }
         }
@@ -780,14 +809,15 @@
                 }
             }, { passive: false });
         }
-//sw.js eriómtrŋniiő
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker registered!', reg))
-            .catch(err => console.log('Service Worker registration failed: ', err));
-    });
-}
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registered!', reg))
+                    .catch(err => console.log('Service Worker registration failed: ', err));
+            });
+        }
 
     </script>
 </body>
