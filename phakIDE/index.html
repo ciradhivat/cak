@@ -2,460 +2,785 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Pfäk IDE Editor (Ace Edition)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pfäk IDE Editor (Full Options)</title>
 
 <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
 
-    <!-- 1. Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 2. FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- 3. Google Fonts: JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
-    <!-- 4. JS Beautify -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify-css.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.14.11/beautify-html.min.js"></script>
-
-    <!-- 5. Ace Editor (Main + Tools + Emmet support if needed) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ext-language_tools.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ext-searchbox.min.js"></script>
-    
     <style>
-        /* Base Styles */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #1f2937; }
-        ::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
-        
-        body { overscroll-behavior-y: none; }
-
-        .sidebar-transition { transition: transform 0.3s ease-in-out; }
-        #main-nav { transition: transform 0.3s ease-in-out; will-change: transform; }
-        .nav-hidden { transform: translateY(-100%); }
-        .fab-transition { transition: transform 0.2s, background-color 0.3s; }
-        .fab-hidden { transform: scale(0); }
-        .hidden-force { display: none !important; }
-
-        /* Typography */
+        /* --- Base Styles --- */
         :root {
-            --editor-font-family: 'JetBrains Mono', monospace; 
+            --bg-color: #1e1e1e;
+            --header-bg: #252526;
+            --border-color: #333;
+            --accent-color: #007acc;
+            --text-color: #cccccc;
+            --menu-bg: #2d2d2d;
+            --input-bg: #3c3c3c;
+            --input-border: #555;
+            --input-focus: #007acc;
+            --console-bg: #111;
+            --console-text: #eee;
+            --console-warn: #e6a23c;
+            --console-err: #f56c6c;
         }
 
-        /* Editor Layout */
-        #editor-wrapper {
-            position: relative;
-            width: 100%;
-            height: 100%;
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- Global Input Dark Theme --- */
+        input[type="text"], 
+        input[type="number"], 
+        input[type="password"], 
+        select, 
+        textarea {
+            background-color: var(--input-bg) !important;
+            color: #fff !important;
+            border: 1px solid var(--input-border) !important;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--input-focus) !important;
+        }
+
+        /* --- Toolbar --- */
+        header {
+            height: 56px;
+            background-color: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-grow: 1;
+            margin-right: 15px;
+        }
+
+        .filename {
+            font-weight: 600; font-size: 1rem; color: #fff;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .status { font-size: 0.75rem; color: #888; display: flex; align-items: center; gap: 4px; }
+
+        .toolbar-actions { display: flex; gap: 8px; }
+
+        .btn-icon {
+            background: transparent;
+            border: 1px solid transparent;
+            color: #e0e0e0;
+            width: 40px; height: 40px;
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
         
-        #editor { 
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            font-family: var(--editor-font-family) !important;
+        .btn-icon:active { 
+            background-color: rgba(255,255,255,0.1); 
+            transform: scale(0.95);
+        }
+        .btn-icon svg { width: 22px; height: 22px; fill: currentColor; }
+        
+        /* Highlight toggle button when active */
+        .btn-icon.active-mode {
+            color: var(--accent-color);
+            background-color: rgba(0, 122, 204, 0.1);
+            border: 1px solid rgba(0, 122, 204, 0.3);
         }
 
-        /* Ace Customization to match theme */
-        .ace_editor { font-family: 'JetBrains Mono', monospace !important; }
-        .ace_gutter { background: #1f2937 !important; color: #6b7280 !important; }
-        .ace_print-margin { display: none !important; }
-        .ace_search { background-color: #374151 !important; color: white !important; border: 1px solid #4b5563 !important; }
-        .ace_search_field { background-color: #1f2937 !important; color: white !important; }
+        /* Run Button Styling */
+        .btn-run { color: #4caf50; }
+        .btn-run:active { background-color: rgba(76, 175, 80, 0.2); }
 
-        /* Console Log Styles */
-        .log-entry { font-family: 'JetBrains Mono', monospace; font-size: 12px; border-bottom: 1px solid #374151; padding: 4px 8px; }
-        .log-info { color: #d1d5db; }
-        .log-warn { color: #fcd34d; background-color: #422006; }
-        .log-error { color: #fca5a5; background-color: #450a0a; }
+        /* --- Editor Container --- */
+        .editor-wrapper { flex-grow: 1; width: 100%; position: relative; }
+        #ace-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
 
-        /* Simple Toast */
-        #toast-msg {
-            position: fixed; 
-            top: 20px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            background: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(10px); 
-            color: white; 
+        /* --- Simple Text Editor (Thai Fix & Scroll Fix) --- */
+        #simple-editor {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            background-color: #141414;
+            color: #f8f8f8;
+            border: none !important;
+            padding: 10px;
+            font-family: 'Fira Code', Consolas, 'Courier New', monospace;
+            font-size: 18px;
+            line-height: 1.4;
+            resize: none;
+            display: none;
+            z-index: 5;
+            outline: none;
+            
+            /* -- FIX: Allow scrolling but keep zoom logic -- */
+            touch-action: pan-y; 
+            overflow-y: auto;
+        }
+        #simple-editor:focus { border: none !important; outline: none; }
+        /* Style for ReadOnly Mode in Simple Editor */
+        #simple-editor[readonly] {
+            background-color: #1a1a1a;
+            color: #aaa;
+        }
+
+        /* Font Size Indicator */
+        #font-size-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 122, 204, 0.95);
+            color: white;
+            padding: 20px 30px;
             border-radius: 12px;
-            padding: 12px 16px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
-            z-index: 100;
-            border: 1px solid #444;
-            transition: opacity 0.3s ease;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 9999;
+            display: none;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+
+        #file-input { display: none; }
+        #loader {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); display: flex;
+            justify-content: center; align-items: center;
+            z-index: 20; color: var(--accent-color);
             pointer-events: none;
         }
-    </style>
-</head>
-<body class="bg-gray-900 text-gray-100 h-[100dvh] w-full flex flex-col overflow-hidden font-sans supports-[height:100dvh]:h-[100dvh] supports-[not(height:100dvh)]:h-screen">
 
-    <!-- Header -->
-    <nav id="main-nav" class="flex items-center justify-between px-4 py-3 bg-gray-800 border-b border-gray-700 shadow-md z-20 shrink-0 h-16 w-full absolute top-0 left-0">
-        <div class="flex items-center gap-3">
-            <button onclick="toggleSidebar()" class="p-2 rounded hover:bg-gray-700 active:bg-gray-600 focus:outline-none transition">
-                <i class="fas fa-bars text-xl"></i>
-            </button>
-            <h1 class="text-lg font-bold truncate max-w-[150px]" id="doc-title">เอกสารใหม่.html</h1>
-        </div>
-        <div class="flex items-center gap-2">
-            <div class="text-xs text-gray-400 hidden sm:block" id="line-count-display">0 บรรทัด</div>
-        </div>
-    </nav>
-
-    <div class="h-16 shrink-0"></div>
-
-    <!-- Main Editor Area (Modified for ACE) -->
-    <div class="flex flex-1 relative overflow-hidden" id="editor-wrapper">
-        <div id="editor"></div>
-    </div>
-
-    <!-- FAB -->
-    <button id="fab-mode" onclick="toggleReadMode()" class="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center text-white z-30 fab-transition hover:scale-110 active:scale-95 border-2 border-gray-700">
-        <i class="fas fa-eye text-xl"></i>
-    </button>
-    <div id="mode-toast" class="fixed bottom-24 right-6 bg-black bg-opacity-80 text-white text-xs px-3 py-1 rounded opacity-0 transition-opacity z-30 pointer-events-none">โหมดอ่าน</div>
-
-    <!-- Sidebar -->
-    <div id="sidebar-overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden backdrop-blur-sm transition-opacity"></div>
-    <div id="sidebar" class="fixed top-0 left-0 w-72 h-full bg-gray-800 shadow-2xl z-50 transform -translate-x-full sidebar-transition flex flex-col border-r border-gray-700">
-        <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900">
-            <h2 class="font-bold text-xl text-white">เมนูหลัก</h2>
-            <button onclick="toggleSidebar()" class="text-gray-400 hover:text-white"><i class="fas fa-times"></i></button>
-        </div>
-        <div class="flex-1 overflow-y-auto p-2 space-y-2">
-            
-            <!-- View Settings -->
-            <div class="bg-gray-700 rounded-lg p-2 mb-2">
-                <div class="text-xs text-gray-400 mb-2 font-bold uppercase">ขนาดตัวอักษร</div>
-                <div class="flex items-center justify-between bg-gray-800 rounded p-1">
-                    <button onclick="adjustFontSize(-1)" class="w-10 h-8 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded text-white active:bg-gray-500"><i class="fas fa-minus text-xs"></i></button>
-                    <span id="font-size-label" class="text-sm font-mono text-yellow-300">14px</span>
-                    <button onclick="adjustFontSize(1)" class="w-10 h-8 flex items-center justify-center bg-gray-700 hover:bg-gray-600 rounded text-white active:bg-gray-500"><i class="fas fa-plus text-xs"></i></button>
-                </div>
-            </div>
-
-            <div class="bg-gray-700 rounded-lg p-2 mb-2">
-                <div class="text-xs text-gray-400 mb-2 font-bold uppercase">เครื่องมือโค้ด</div>
-                <button onclick="runLocalPreview()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-cyan-300 text-left mb-1">
-                    <i class="fas fa-play w-6 text-center"></i> <span>รัน / ดูผลลัพธ์ (Local)</span>
-                </button>
-                <button onclick="formatCode()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-pink-300 text-left mb-1">
-                    <i class="fas fa-magic w-6 text-center"></i> <span>จัดรูปแบบอัตโนมัติ</span>
-                </button>
-                <button onclick="openInBrowser()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-purple-300 text-left">
-                    <i class="fas fa-external-link-alt w-6 text-center"></i> <span>เปิด Tab ใหม่</span>
-                </button>
-            </div>
-
-            <div class="bg-gray-700 rounded-lg p-2 mb-2">
-                <div class="text-xs text-gray-400 mb-2 font-bold uppercase">การแสดงผล</div>
-                <button onclick="toggleLineNumbersExplicit()" id="btn-line-nums" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-blue-300 text-left mb-1">
-                    <i class="fas fa-list-ol w-6 text-center"></i> <span id="label-line-nums">เลขบรรทัด: แสดง</span>
-                </button>
-                <button onclick="toggleSoftWrap()" id="btn-wrap" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-gray-300 text-left">
-                    <i class="fas fa-align-left w-6 text-center"></i> <span id="label-wrap">ตัดคำอัตโนมัติ: ปิด</span>
-                </button>
-            </div>
-            
-            <div class="bg-gray-700 rounded-lg p-2 mb-2">
-                <div class="text-xs text-gray-400 mb-2 font-bold uppercase">การนำทาง</div>
-                <button onclick="scrollToTop()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-yellow-300 text-left mb-1">
-                    <i class="fas fa-arrow-up w-6 text-center"></i> <span>ไปบรรทัดแรก</span>
-                </button>
-                <button onclick="scrollToBottom()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-yellow-300 text-left">
-                    <i class="fas fa-arrow-down w-6 text-center"></i> <span>ไปบรรทัดสุดท้าย</span>
-                </button>
-            </div>
-            
-            <div class="bg-gray-700 rounded-lg p-2">
-                <div class="text-xs text-gray-400 mb-2 font-bold uppercase">จัดการไฟล์</div>
-                <button onclick="newFile()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-white text-left mb-1">
-                    <i class="fas fa-file w-6 text-center"></i> <span>สร้างไฟล์ใหม่</span>
-                </button>
-                <label class="flex items-center gap-3 p-2 rounded hover:bg-gray-600 cursor-pointer text-blue-300 mb-1">
-                    <i class="fas fa-file-import w-6 text-center"></i> <span>นำเข้าไฟล์</span>
-                    <input type="file" id="file-input" accept=".txt,.html,.css,.js" class="hidden" onchange="loadFile(this)">
-                </label>
-                <button onclick="saveFile()" class="w-full flex items-center gap-3 p-2 rounded hover:bg-gray-600 text-green-300 text-left">
-                    <i class="fas fa-save w-6 text-center"></i> <span>บันทึกไฟล์ (Save)</span>
-                </button>
-            </div>
-            
-            <div class="p-3 text-gray-400 text-sm">
-                <div class="mb-2 font-bold text-gray-300">ข้อมูลไฟล์</div>
-                <div id="stat-lines">บรรทัด: 0</div>
-                <div id="stat-chars">ตัวอักษร: 0</div>
-                <div id="stat-mode" class="mt-2 text-blue-400 font-bold transition-colors duration-300">สถานะ: แก้ไขได้</div>
-            </div>
-        </div>
-        <div class="p-4 border-t border-gray-700 text-xs text-gray-500 text-center bg-gray-900">Text Master Mobile v18.0 Ace</div>
-    </div>
-
-    <!-- PREVIEW OVERLAY -->
-    <div id="preview-overlay" class="fixed inset-0 bg-gray-900 z-50 flex flex-col hidden">
-        <div class="flex items-center justify-between px-4 py-2 bg-gray-800 border-b border-gray-700 shrink-0">
-            <h2 class="text-white font-bold flex items-center gap-2 text-sm sm:text-base">
-                <i class="fas fa-globe-asia text-cyan-400"></i> Local Preview
-            </h2>
-            <div class="flex gap-2">
-                <button onclick="toggleConsole()" id="btn-toggle-console" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-white text-xs flex items-center gap-1 border border-gray-600">
-                    <i class="fas fa-terminal"></i> <span id="txt-toggle-console" class="hidden sm:inline">ซ่อน Log</span>
-                </button>
-                <button onclick="runLocalPreview()" class="px-3 py-1 bg-green-700 hover:bg-green-600 rounded text-white text-xs"><i class="fas fa-sync-alt"></i></button>
-                <button onclick="closePreview()" class="px-3 py-1 bg-red-700 hover:bg-red-600 rounded text-white text-xs"><i class="fas fa-times"></i></button>
-            </div>
-        </div>
-        <div class="flex-1 bg-white relative">
-            <iframe id="preview-frame" class="w-full h-full border-none"></iframe>
-        </div>
-        <div class="flex flex-col bg-gray-900 border-t border-gray-700 h-1/3 shrink-0" id="console-container">
-            <div class="flex items-center justify-between px-2 py-1 bg-gray-800 border-b border-gray-700">
-                <div class="text-xs text-gray-400 font-bold uppercase flex items-center gap-2">
-                    <i class="fas fa-terminal"></i> Console / Logs <span id="log-count" class="bg-gray-700 text-white px-1 rounded-full text-[10px]">0</span>
-                </div>
-                <button onclick="clearConsole()" class="text-gray-400 hover:text-white text-xs"><i class="fas fa-trash-alt"></i> ล้าง</button>
-            </div>
-            <div id="console-logs" class="flex-1 overflow-y-auto p-2 font-mono text-xs text-gray-300 space-y-1">
-                <div class="text-gray-500 italic text-center mt-4">ไม่มี Log (พร้อมทำงาน)</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Simple Toast -->
-    <div id="toast-msg" class="opacity-0"></div>
-
-    <script>
-        // --- ACE EDITOR INITIALIZATION ---
-        // Setup Ace Editor
-        var aceEditor = ace.edit("editor");
-        aceEditor.setTheme("ace/theme/dracula");
-        aceEditor.session.setMode("ace/mode/html");
+        /* --- Preview Overlay --- */
+        #preview-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color);
+            z-index: 50; display: none; flex-direction: column;
+        }
+        #preview-header {
+            height: 56px; 
+            background: var(--header-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; 
+            color: var(--text-color);
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        #preview-frame { flex-grow: 1; border: none; width: 100%; background: #fff; }
         
-        // Editor Options for Mobile/Performance
-        aceEditor.setOptions({
-            fontSize: "14px",
-            fontFamily: "JetBrains Mono",
-            showPrintMargin: false,
-            showGutter: true,
-            highlightActiveLine: true,
-            wrap: false, // Default no wrap
-            useSoftTabs: true,
-            tabSize: 4,
-            displayIndentGuides: true,
-            scrollPastEnd: 0.5, // Allow scrolling past end
-        });
+        .preview-actions { display: flex; gap: 10px; align-items: center; }
 
-        // Set Default Value
-        aceEditor.setValue(`<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hello Ace</title>
-    <style>
-        body { background: #111; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
-        h1 { color: #4ade80; }
+        .btn-header {
+            background: #333; color: #ccc; border: 1px solid #555;
+            padding: 6px 12px; border-radius: 4px; font-weight: 500; font-size: 0.85rem;
+            cursor: pointer; display: flex; align-items: center; gap: 6px;
+        }
+        .btn-header:active { background: #444; }
+        .btn-header.close { background: #c62828; color: white; border-color: #c62828; }
+        .btn-header.close:active { background: #d32f2f; }
+        
+        .btn-header.console-toggle.active {
+            background: var(--accent-color);
+            color: white; border-color: var(--accent-color);
+        }
+
+        /* --- Console Pane --- */
+        #console-pane {
+            height: 35%; 
+            background: var(--console-bg);
+            border-top: 2px solid var(--accent-color);
+            display: none; 
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.5);
+            z-index: 60;
+        }
+        
+        #console-toolbar {
+            height: 32px;
+            background: #222;
+            border-bottom: 1px solid #333;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 10px;
+            font-size: 0.8rem; color: #aaa;
+        }
+        
+        #console-output {
+            flex-grow: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: 'Fira Code', Consolas, monospace;
+            font-size: 13px;
+        }
+
+        .log-entry { 
+            padding: 4px 0; border-bottom: 1px solid #222; 
+            word-wrap: break-word; white-space: pre-wrap; 
+        }
+        .log-info { color: #ccc; }
+        .log-warn { color: var(--console-warn); background: rgba(230, 162, 60, 0.1); }
+        .log-error { color: var(--console-err); background: rgba(245, 108, 108, 0.1); }
+        .log-time { color: #555; font-size: 0.75rem; margin-right: 8px; user-select: none; }
+
+        /* =========================================
+           ✨ Floating Read/Edit Mode Button ✨
+           ========================================= */
+        #fab-read-mode {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 30; /* Higher than editor, lower than preview */
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        #fab-read-mode:active {
+            transform: scale(0.9);
+        }
+        #fab-read-mode svg {
+            width: 28px;
+            height: 28px;
+            fill: currentColor;
+        }
+        #fab-read-mode.reading-mode {
+            background-color: #666; /* Grey when in read mode (to click to edit) */
+        }
+
+        /* =========================================
+           ✨ DARK THEME PALETTE MENU (Settings Menu) ✨
+           ========================================= */
+        #ace_settingsmenu, .ace_settingsmenu {
+            top: 50% !important; left: 50% !important;
+            bottom: auto !important; right: auto !important;
+            transform: translate(-50%, -50%) !important;
+            position: fixed !important;
+            background-color: #252526 !important;
+            color: #f0f0f0 !important;
+            border: 1px solid #454545 !important;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6) !important;
+            border-radius: 12px !important;
+            width: 90% !important;
+            max-width: 420px !important;
+            max-height: 70vh !important;
+            padding: 20px !important;
+            overflow-y: auto !important;
+            z-index: 99999 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        }
+        .ace_settingsmenu label {
+            display: block; font-size: 1.1rem !important; font-weight: 600 !important;
+            color: #4ec9b0 !important; margin-top: 15px !important; margin-bottom: 8px !important;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .ace_settingsmenu > div:first-child label { margin-top: 0 !important; }
+        .ace_settingsmenu .ace_optionsMenuEntry {
+            display: flex !important; align-items: center !important; justify-content: space-between !important;
+            padding: 12px 8px !important; border-bottom: 1px solid #333 !important;
+            font-size: 15px !important; color: #d4d4d4 !important; transition: background 0.2s;
+        }
+        .ace_settingsmenu .ace_optionsMenuEntry:hover {
+            background-color: #2a2d2e !important; border-radius: 6px;
+        }
+        .ace_settingsmenu input[type="text"], .ace_settingsmenu select {
+            width: 100% !important; padding: 10px 12px !important;
+            background-color: var(--input-bg) !important; border: 1px solid var(--input-border) !important;
+            border-radius: 6px !important; color: white !important; font-size: 18px !important;
+            margin-top: 5px !important; margin-bottom: 10px !important; height: 40px !important;
+        }
+        .ace_settingsmenu input[type="text"]:focus, .ace_settingsmenu select:focus {
+            border-color: var(--input-focus) !important; outline: none !important;
+        }
+        .ace_settingsmenu input[type="checkbox"] { transform: scale(1.2); cursor: pointer; accent-color: var(--accent-color); }
+        .ace_settingsmenu button {
+            background-color: #0e639c !important; color: white !important; border: none !important;
+            padding: 12px !important; margin-top: 20px !important; border-radius: 6px !important;
+            width: 100% !important; font-size: 15px !important; font-weight: 600 !important;
+            cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .ace_settingsmenu button:active { background-color: #1177bb !important; transform: scale(0.98); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1e1e1e; }
+        ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .ace_editor.ace_autocomplete {
+            background-color: #252526 !important; border: 1px solid #007acc !important;
+            color: #ccc !important; box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important;
+        }
+        .ace_autocomplete .ace_line:hover, .ace_autocomplete .ace_line.ace_selected {
+            background-color: #004269 !important;
+        }
+        .ace_search {
+            background-color: #252526 !important; border: 1px solid #3e3e3e !important;
+            color: #ccc !important; padding: 8px !important;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5) !important; bottom: auto !important;
+        }
+        .ace_search_field {
+            background-color: var(--input-bg) !important; border: 1px solid var(--input-border) !important;
+            color: white !important; border-radius: 3px !important; padding: 4px !important;
+        }
+        .ace_searchbtn {
+            background: #3e3e3e !important; border: 1px solid #555 !important; color: #ccc !important;
+        }
+        .ace_searchbtn:hover { background: #555 !important; }
+
     </style>
 </head>
 <body>
-    <h1>Hello World!</h1>
-</body>
-</html>`, -1); // -1 moves cursor to start
 
-        // --- Core Variables ---
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        const modeToast = document.getElementById('mode-toast');
-        const fabBtn = document.getElementById('fab-mode');
-        const fabIcon = fabBtn.querySelector('i');
-        const btnLineNums = document.getElementById('btn-line-nums');
-        const labelLineNums = document.getElementById('label-line-nums');
-        const btnWrap = document.getElementById('btn-wrap');
-        const labelWrap = document.getElementById('label-wrap');
-        const fontSizeLabel = document.getElementById('font-size-label');
-        const statMode = document.getElementById('stat-mode');
-        const docTitle = document.getElementById('doc-title');
-        const toastEl = document.getElementById('toast-msg');
+    <!-- Header -->
+    <header>
+        <div class="file-info">
+            <span class="filename" id="display-filename">index.html</span>
+            <span class="status" id="save-status">● Ready</span>
+        </div>
+        <div class="toolbar-actions">
+            <!-- New: Toggle Mode Button -->
+            <button class="btn-icon" id="btn-toggle-mode" onclick="toggleEditorMode()" title="Switch Text/Code Mode (Fix Thai)">
+                <!-- Icon Text 'T' -->
+                <svg viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4z"/></svg>
+            </button>
 
-        // --- Preview Variables ---
-        const previewOverlay = document.getElementById('preview-overlay');
-        const previewFrame = document.getElementById('preview-frame');
-        const consoleContainer = document.getElementById('console-container');
-        const consoleLogs = document.getElementById('console-logs');
-        const btnToggleConsole = document.getElementById('btn-toggle-console');
-        const txtToggleConsole = document.getElementById('txt-toggle-console');
-        let isConsoleVisible = true;
-        let logCount = 0;
+            <button class="btn-icon" onclick="triggerPalette()" title="Settings">
+                <svg viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+            </button>
+            <button class="btn-icon" onclick="triggerOpenFile()" title="Open">
+                <svg viewBox="0 0 24 24"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg>
+            </button>
+            <button class="btn-icon" onclick="downloadFile()" title="Save">
+                <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+            </button>
+            <button class="btn-icon btn-run" onclick="runCode()" title="Run">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+        </div>
+    </header>
 
-        let currentFileName = "index.html";
-        let isReadOnly = false;
-        let isLineNumsVisible = true;
-        let isSoftWrap = false;
-        let currentFontSize = 14;
+    <!-- Editors Area -->
+    <div class="editor-wrapper">
+        <div id="ace-container"></div>
+        <!-- New Simple Text Editor -->
+        <textarea id="simple-editor" spellcheck="false" placeholder="Simple Mode (พิมพ์ไทยไม่เพี้ยน)..."></textarea>
+    </div>
 
-        // --- HELPER: Show Toast ---
-        function showToast(msg) {
-            toastEl.innerText = msg;
-            toastEl.classList.remove('opacity-0');
-            setTimeout(() => toastEl.classList.add('opacity-0'), 2500);
-        }
+    <!-- Font Size Indicator -->
+    <div id="font-size-indicator">18px</div>
 
-        // --- PREVIEW & CONSOLE FUNCTIONS ---
-        function runLocalPreview() { 
-            previewOverlay.classList.remove('hidden'); 
-            toggleSidebar(); 
-            document.getElementById('console-logs').innerHTML='<div class="text-gray-500 italic text-center mt-4">ไม่มี Log (พร้อมทำงาน)</div>'; 
-            document.getElementById('log-count').innerText='0'; 
-            logCount=0; 
+    <div id="loader">Loading Engine...</div>
+    <input type="file" id="file-input" onchange="handleFileOpen(this)">
+
+    <!-- Floating Read/Edit Mode Button -->
+    <button id="fab-read-mode" onclick="toggleReadMode()" title="Toggle Read/Edit Mode">
+        <!-- Default: Show 'Eye' icon (Meaning: Switch to Read Mode) -->
+        <svg viewBox="0 0 24 24" id="fab-icon"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+    </button>
+
+    <!-- Preview Overlay -->
+    <div id="preview-overlay">
+        <div id="preview-header">
+            <span>Result Preview</span>
+            <div class="preview-actions">
+                <button class="btn-header console-toggle" id="btn-console-toggle" onclick="toggleConsole()">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="margin-right:2px"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-1 14H5v-2h14v2zm0-4H5V8h14v6z"/></svg>
+                    Console
+                </button>
+                <button class="btn-header close" onclick="closePreview()">Close</button>
+            </div>
+        </div>
+        <iframe id="preview-frame"></iframe>
+        
+        <!-- Console Pane -->
+        <div id="console-pane">
+            <div id="console-toolbar">
+                <span>JS Console</span>
+                <span style="cursor:pointer; color:#ccc;" onclick="clearConsoleOutput()">Clear ⊘</span>
+            </div>
+            <div id="console-output"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ext-language_tools.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ext-settings_menu.min.js"></script>
+
+    <script>
+        let aceEditor = null;
+        let isSimpleMode = false;
+        let isReadOnlyMode = false; // New State
+        
+        const simpleEditor = document.getElementById('simple-editor');
+        const aceContainer = document.getElementById('ace-container');
+        const btnToggle = document.getElementById('btn-toggle-mode');
+        const fontSizeIndicator = document.getElementById('font-size-indicator');
+        const fabBtn = document.getElementById('fab-read-mode');
+        const fabIcon = document.getElementById('fab-icon');
+
+        // Font size control for Simple Editor
+        let currentFontSize = 18;
+        const MIN_FONT_SIZE = 10;
+        const MAX_FONT_SIZE = 48;
+
+        const LOCAL_STORAGE_KEY = 'monaco_code_pro';
+        const statusEl = document.getElementById('save-status');
+        const filenameEl = document.getElementById('display-filename');
+        const loader = document.getElementById('loader');
+
+        document.addEventListener("DOMContentLoaded", function() { 
+            initAce(); 
+            // Listen for console messages from iframe
+            window.addEventListener('message', handleConsoleMessage);
+        });
+
+        function initAce() {
+            aceEditor = ace.edit("ace-container");
+            aceEditor.setTheme("ace/theme/twilight");
+            aceEditor.session.setMode("ace/mode/html");
             
-            const c = aceEditor.getValue(); // Get content from Ace
-            const i=`<script>(function(){function s(t,a){try{window.parent.postMessage({s:'pc',t:t,m:a.map(x=>(typeof x=='object'?JSON.stringify(x):String(x))).join(' ')},'*')}catch(e){}}const ol=console.log,ow=console.warn,oe=console.error;console.log=(...a)=>{s('i',a);ol.apply(console,a)};console.warn=(...a)=>{s('w',a);ow.apply(console,a)};console.error=(...a)=>{s('e',a);oe.apply(console,a)};window.onerror=(m,u,l,c,e)=>{s('e',[\`Uncaught: \${m} (Line:\${l})\`]);return false;};})();<\/script>`; 
-            let h=c.includes('<head>')?c.replace('<head>','<head>'+i):i+c; 
-            previewFrame.src=URL.createObjectURL(new Blob([h],{type:'text/html'})); 
-        }
+            aceEditor.setOptions({
+                fontSize: "18px",
+                wrap: true,
+                enableBasicAutocompletion: true,
+                enableLiveAutocompletion: true,
+                enableSnippets: true,
+                showPrintMargin: false,
+                useWorker: false,
+                fontFamily: "'Fira Code', Consolas, 'Courier New', monospace"
+            });
 
-        window.addEventListener('message', e=>{if(e.data&&e.data.s==='pc')addLogEntry(e.data.t==='i'?'info':(e.data.t==='w'?'warn':'error'),e.data.m);});
-        function addLogEntry(t,m) { if(logCount===0)document.getElementById('console-logs').innerHTML=''; logCount++; document.getElementById('log-count').innerText=logCount; const d=document.createElement('div'); d.className=`log-entry log-${t}`; const tm=new Date().toLocaleTimeString('th-TH',{hour12:false}); const ic=t==='error'?'<i class="fas fa-times-circle mr-1"></i>':(t==='warn'?'<i class="fas fa-exclamation-triangle mr-1"></i>':'<i class="fas fa-info-circle mr-1"></i>'); d.innerHTML=`<span class="opacity-50 mr-2">[${tm}]</span>${ic} ${m.replace(/</g,'&lt;')}`; document.getElementById('console-logs').appendChild(d); document.getElementById('console-logs').scrollTop=document.getElementById('console-logs').scrollHeight; }
-        function closePreview() { previewOverlay.classList.add('hidden'); previewFrame.src=""; }
-        function toggleConsole() { isConsoleVisible=!isConsoleVisible; if(isConsoleVisible){consoleContainer.classList.remove('hidden');btnToggleConsole.classList.replace('bg-gray-500','bg-gray-700');txtToggleConsole.innerText="ซ่อน Log";}else{consoleContainer.classList.add('hidden');btnToggleConsole.classList.replace('bg-gray-700','bg-gray-500');txtToggleConsole.innerText="แสดง Log";} }
-        function clearConsole() { document.getElementById('console-logs').innerHTML='<div class="text-gray-500 italic text-center mt-4">ไม่มี Log (พร้อมทำงาน)</div>'; logCount=0; document.getElementById('log-count').innerText='0'; }
-
-        // --- UI FUNCTIONS ---
-        // Stats Listener with Ace
-        aceEditor.session.on('change', updateStats);
-        
-        function toggleSidebar() { sidebar.classList.toggle('-translate-x-full'); overlay.classList.toggle('hidden'); fabBtn.classList.toggle('fab-hidden', !sidebar.classList.contains('-translate-x-full')); }
-        
-        function openInBrowser() { 
-            window.open(URL.createObjectURL(new Blob([aceEditor.getValue()], {type:'text/html'})), '_blank'); 
-            toggleSidebar(); 
-        }
-        
-        function newFile() { 
-            if(aceEditor.getValue().trim() && !confirm("ข้อมูลหาย?")) return; 
-            aceEditor.setValue(""); 
-            docTitle.innerText = "เอกสารใหม่.html";
-            toggleSidebar(); 
-        }
-
-        function toggleReadMode() { 
-            isReadOnly = !isReadOnly; 
-            aceEditor.setReadOnly(isReadOnly);
-            // Visual Updates
-            fabIcon.className = isReadOnly ? "fas fa-pen" : "fas fa-eye"; 
-            fabBtn.classList.toggle('bg-blue-600'); 
-            fabBtn.classList.toggle('bg-gray-600'); 
-            modeToast.innerText = isReadOnly ? "โหมดอ่าน" : "โหมดแก้ไข"; 
-            modeToast.classList.remove('opacity-0'); 
-            setTimeout(()=>modeToast.classList.add('opacity-0'),2000); 
-            
-            if(isReadOnly){
-                statMode.innerText="สถานะ: อ่านอย่างเดียว";
-                statMode.className="mt-2 text-gray-400 font-bold transition-colors duration-300";
-                aceEditor.renderer.setStyle("disabled", true);
+            // Load Saved Data
+            const savedCode = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (savedCode) {
+                aceEditor.setValue(savedCode, 1);
+                simpleEditor.value = savedCode;
             } else {
-                statMode.innerText="สถานะ: แก้ไขได้";
-                statMode.className="mt-2 text-blue-400 font-bold transition-colors duration-300";
-                aceEditor.renderer.setStyle("disabled", false);
+                aceEditor.setValue("<!-- Ace Engine Mobile -->\n<h1 id='demo'>svästqii jaavolk</h1>\n<script>\n  console.log('Hello Console!');\n  console.warn('This is a warning');\n<\/script>", 1);
+                simpleEditor.value = "<!-- Ace Engine Mobile -->\n<h1 id='demo'>svästqii jaavolk</h1>\n<script>\n  console.log('Hello Console!');\n  console.warn('This is a warning');\n<\/script>";
             }
-            if(!isReadOnly) aceEditor.focus();
-        }
-
-        function updateStats() { 
-            const val = aceEditor.getValue();
-            const lines = aceEditor.session.getLength();
-            document.getElementById('stat-lines').innerText = `บรรทัด: ${lines}`; 
-            document.getElementById('line-count-display').innerText = `${lines} บรรทัด`; 
-            document.getElementById('stat-chars').innerText = `ตัวอักษร: ${val.length}`; 
-        }
-
-        function saveFile() { 
-            const a=document.createElement('a'); 
-            a.href=URL.createObjectURL(new Blob([aceEditor.getValue()],{type:'text/plain'})); 
-            a.download=currentFileName; 
-            document.body.appendChild(a); a.click(); document.body.removeChild(a); 
-            toggleSidebar(); 
-        }
-
-        function loadFile(i) { 
-            const f=i.files[0]; 
-            if(!f)return; 
-            const r=new FileReader(); 
-            r.onload=e=>{
-                aceEditor.setValue(e.target.result, -1);
-                currentFileName = f.name;
-                docTitle.innerText = f.name;
-                
-                // Auto Detect Mode (Simple)
-                if(f.name.endsWith('.js')) aceEditor.session.setMode("ace/mode/javascript");
-                else if(f.name.endsWith('.css')) aceEditor.session.setMode("ace/mode/css");
-                else aceEditor.session.setMode("ace/mode/html");
-                
-                updateStats(); 
-            }; 
-            r.readAsText(f); 
-            toggleSidebar(); 
-            i.value=''; 
-        }
-
-        // --- Editor Settings Logic Mapping ---
-        function toggleLineNumbersExplicit() { 
-            isLineNumsVisible = !isLineNumsVisible; 
-            aceEditor.renderer.setShowGutter(isLineNumsVisible);
             
-            btnLineNums.classList.toggle('text-blue-300'); 
-            labelLineNums.innerText = isLineNumsVisible ? "เลขบรรทัด: แสดง" : "เลขบรรทัด: ซ่อน";
-            toggleSidebar(); 
+            ace.config.loadModule("ace/ext/settings_menu", function(module) {
+                module.init(aceEditor);
+            });
+
+            // Auto Save Trigger for Ace
+            aceEditor.session.on('change', function() { 
+                if (!isSimpleMode && !isReadOnlyMode) handleAutoSave(aceEditor.getValue()); 
+            });
+
+            // Auto Save Trigger for Simple Editor
+            simpleEditor.addEventListener('input', function() {
+                if (isSimpleMode && !isReadOnlyMode) handleAutoSave(simpleEditor.value);
+            });
+
+            // Setup font size controls for Simple Editor
+            setupFontSizeControls();
+
+            loader.style.display = 'none';
         }
+
+        // Toggle Function (Core Logic)
+        function toggleEditorMode() {
+            isSimpleMode = !isSimpleMode;
+            
+            if (isSimpleMode) {
+                // Switch to Text Mode: Ace -> Textarea
+                simpleEditor.value = aceEditor.getValue();
+                aceContainer.style.display = 'none';
+                simpleEditor.style.display = 'block';
+                btnToggle.classList.add('active-mode');
+                btnToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>';
+            } else {
+                // Switch to Ace Mode: Textarea -> Ace
+                aceEditor.setValue(simpleEditor.value, 1);
+                simpleEditor.style.display = 'none';
+                aceContainer.style.display = 'block';
+                btnToggle.classList.remove('active-mode');
+                aceEditor.focus();
+                btnToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 4v3h5.5v12h3V7H19V4z"/></svg>';
+            }
+        }
+
+        // --- NEW: Toggle Read-Only Mode ---
+        function toggleReadMode() {
+            isReadOnlyMode = !isReadOnlyMode;
+
+            // Apply to Ace
+            aceEditor.setReadOnly(isReadOnlyMode);
+
+            // Apply to Simple Textarea
+            simpleEditor.readOnly = isReadOnlyMode;
+
+            if (isReadOnlyMode) {
+                // Switch Icon to "Pencil" (Edit)
+                fabIcon.innerHTML = '<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>';
+                fabBtn.classList.add('reading-mode');
+                fabBtn.style.backgroundColor = '#555'; // Grey for Read Mode
+                statusEl.innerText = '● Read Only';
+            } else {
+                // Switch Icon to "Eye" (Read)
+                fabIcon.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+                fabBtn.classList.remove('reading-mode');
+                fabBtn.style.backgroundColor = ''; // Revert to accent color
+                statusEl.innerText = '● Ready';
+            }
+        }
+
+        function handleAutoSave(content) {
+            statusEl.innerText = "Saving...";
+            statusEl.style.color = "#e6a23c";
+            clearTimeout(window.saveTimeout);
+            window.saveTimeout = setTimeout(() => {
+                localStorage.setItem(LOCAL_STORAGE_KEY, content);
+                statusEl.innerText = `● Saved`;
+                statusEl.style.color = "#67c23a";
+            }, 800);
+        }
+
+        function triggerPalette() {
+            if (isSimpleMode) {
+                alert("Please switch back to Code View to change Ace Settings.");
+                return;
+            }
+            if (aceEditor) {
+                aceEditor.focus();
+                ace.config.loadModule("ace/ext/settings_menu", function(module) {
+                    module.init(aceEditor);
+                    aceEditor.execCommand("showSettingsMenu");
+                });
+            }
+        }
+
+        // --- CONSOLE & PREVIEW LOGIC ---
+        function runCode() {
+            let code = isSimpleMode ? simpleEditor.value : aceEditor.getValue();
+            const overlay = document.getElementById('preview-overlay');
+            const iframe = document.getElementById('preview-frame');
+            
+            // Clear old console logs
+            clearConsoleOutput();
+
+            // Inject Console Interceptor Script
+            const consoleShim = `
+            <script>
+            (function(){
+                var oldLog = console.log;
+                var oldWarn = console.warn;
+                var oldError = console.error;
+                var oldInfo = console.info;
+
+                function send(type, args) {
+                    try {
+                        var msg = args.map(arg => {
+                            if (typeof arg === 'object') {
+                                try { return JSON.stringify(arg, null, 2); } catch(e) { return String(arg); }
+                            }
+                            return String(arg);
+                        }).join(' ');
+                        window.parent.postMessage({type: 'console', level: type, msg: msg}, '*');
+                    } catch(e) {}
+                }
+
+                console.log = function(...args){ oldLog.apply(console, args); send('log', args); };
+                console.error = function(...args){ oldError.apply(console, args); send('error', args); };
+                console.warn = function(...args){ oldWarn.apply(console, args); send('warn', args); };
+                console.info = function(...args){ oldInfo.apply(console, args); send('info', args); };
+                
+                window.onerror = function(msg, url, line) {
+                     send('error', ['Uncaught Error: ' + msg + ' (Line: ' + line + ')']);
+                };
+            })();
+            <\/script>
+            `;
+
+            // Prepend shim to code
+            code = consoleShim + code;
+
+            overlay.style.display = 'flex';
+            
+            if (iframe.src && iframe.src.startsWith('blob:')) {
+                URL.revokeObjectURL(iframe.src);
+            }
+
+            const blob = new Blob([code], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            iframe.src = url;
+        }
+
+        function closePreview() { 
+            const overlay = document.getElementById('preview-overlay');
+            const iframe = document.getElementById('preview-frame');
+            overlay.style.display = 'none';
+            iframe.src = 'about:blank';
+        }
+
+        function toggleConsole() {
+            const consolePane = document.getElementById('console-pane');
+            const btn = document.getElementById('btn-console-toggle');
+            if (consolePane.style.display === 'flex') {
+                consolePane.style.display = 'none';
+                btn.classList.remove('active');
+            } else {
+                consolePane.style.display = 'flex';
+                btn.classList.add('active');
+            }
+        }
+
+        function clearConsoleOutput() {
+            document.getElementById('console-output').innerHTML = '';
+        }
+
+        function handleConsoleMessage(event) {
+            if (event.data && event.data.type === 'console') {
+                const output = document.getElementById('console-output');
+                const div = document.createElement('div');
+                div.className = `log-entry log-${event.data.level}`;
+                
+                const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+                div.innerHTML = `<span class="log-time">[${time}]</span> ${escapeHtml(event.data.msg)}`;
+                
+                output.appendChild(div);
+                output.scrollTop = output.scrollHeight;
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, "&amp;")
+                       .replace(/</g, "&lt;")
+                       .replace(/>/g, "&gt;")
+                       .replace(/"/g, "&quot;")
+                       .replace(/'/g, "&#039;");
+        }
+
+        function triggerOpenFile() { document.getElementById('file-input').click(); }
         
-        function toggleSoftWrap() { 
-            isSoftWrap = !isSoftWrap; 
-            aceEditor.session.setUseWrapMode(isSoftWrap);
-            
-            btnWrap.classList.toggle('text-blue-300'); 
-            labelWrap.innerText = isSoftWrap ? "ตัดคำอัตโนมัติ: เปิด" : "ตัดคำอัตโนมัติ: ปิด";
-            toggleSidebar(); 
+        function handleFileOpen(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                
+                aceEditor.setValue(content, 1);
+                simpleEditor.value = content;
+                
+                aceEditor.clearSelection();
+                filenameEl.innerText = file.name;
+                const ext = file.name.split('.').pop().toLowerCase();
+                const mode = (ext === 'js') ? 'ace/mode/javascript' : (ext === 'css') ? 'ace/mode/css' : 'ace/mode/html';
+                aceEditor.session.setMode(mode);
+
+                if (isSimpleMode) {
+                    simpleEditor.value = content;
+                }
+            };
+            reader.readAsText(file);
+            input.value = '';
         }
 
-        function adjustFontSize(d) { 
-            let n = currentFontSize + d; 
-            if(n>=10 && n<=32){
-                currentFontSize = n; 
-                aceEditor.setFontSize(n + "px");
-                document.getElementById('font-size-label').innerText=`${n}px`;
-            } 
+        function downloadFile() {
+            const content = isSimpleMode ? simpleEditor.value : aceEditor.getValue();
+            const filename = prompt("File Name:", filenameEl.innerText);
+            if (filename) {
+                const blob = new Blob([content], { type: 'text/plain' });
+                const a = document.createElement('a');
+                a.href = window.URL.createObjectURL(blob);
+                a.download = filename; a.click();
+            }
         }
 
-        function formatCode() { 
-            if(isReadOnly)return; 
-            const o={indent_size:4}; 
-            let c = aceEditor.getValue(); 
-            // Detect based on content
-            if(c.includes('<html') || c.trim().startsWith('<!DOCTYPE')) c = html_beautify(c,o); 
-            else if(c.includes('{') && !c.includes('<')) c = css_beautify(c,o); // Rough guess
-            else if(c.includes('function') || c.includes('const ')) c = js_beautify(c,o);
-            else c = html_beautify(c,o); // Fallback
+        // ============================================
+        // ✨ FONT SIZE CONTROLS (Pinch + Ctrl+Scroll)
+        // ============================================
+        function setupFontSizeControls() {
+            let lastTouchDistance = 0;
+            let indicatorTimeout;
 
-            aceEditor.setValue(c, -1);
-            toggleSidebar(); 
+            function showFontSizeIndicator() {
+                fontSizeIndicator.textContent = currentFontSize + 'px';
+                fontSizeIndicator.style.display = 'block';
+                clearTimeout(indicatorTimeout);
+                indicatorTimeout = setTimeout(() => {
+                    fontSizeIndicator.style.display = 'none';
+                }, 1000);
+            }
+
+            function changeFontSize(delta) {
+                currentFontSize = Math.max(MIN_FONT_SIZE, Math.min(MAX_FONT_SIZE, currentFontSize + delta));
+                simpleEditor.style.fontSize = currentFontSize + 'px';
+                showFontSizeIndicator();
+            }
+
+            simpleEditor.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    lastTouchDistance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+                }
+            }, { passive: false });
+
+            simpleEditor.addEventListener('touchmove', function(e) {
+                // If 2 fingers -> ZOOM (prevent default scroll)
+                if (e.touches.length === 2 && isSimpleMode) {
+                    e.preventDefault(); 
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const currentDistance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+
+                    const delta = currentDistance - lastTouchDistance;
+                    if (Math.abs(delta) > 10) {
+                        if (delta > 0) changeFontSize(2); else changeFontSize(-2);
+                        lastTouchDistance = currentDistance;
+                    }
+                }
+                // If 1 finger -> DEFAULT BROWSER SCROLL (handled by CSS touch-action: pan-y)
+            }, { passive: false });
+
+            simpleEditor.addEventListener('wheel', function(e) {
+                if (e.ctrlKey && isSimpleMode) {
+                    e.preventDefault();
+                    if (e.deltaY < 0) changeFontSize(1); else changeFontSize(-1);
+                }
+            }, { passive: false });
         }
-
-        function scrollToTop() { aceEditor.scrollToLine(0, true, true, function(){}); toggleSidebar(); }
-        function scrollToBottom() { aceEditor.scrollToLine(aceEditor.session.getLength(), true, true, function(){}); toggleSidebar(); }
-
-        // Init
-        updateStats();
-
+//sw.js eriómtrŋniiő
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
