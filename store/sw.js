@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cak-store-v2'; // เปลี่ยนเวอร์ชันเพื่อทดสอบการ update ได้เลย
+const CACHE_NAME = 'cak-store-v3'; // เปลี่ยนเวอร์ชันเพื่อทดสอบการ update ได้เลย
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
