@@ -559,6 +559,9 @@
                     <button class="key-btn" onclick="ins('p̥')">p̥</button>
                     
                     <button class="key-btn" onclick="ins('t̥h')">t̥h</button>
+
+                    <button class="key-btn" onclick="ins('h̊')">h̊</button>
+
                     <div class="key-spacer"></div>
                     <div class="key-spacer"></div>
                     <div class="key-spacer"></div>
@@ -657,6 +660,8 @@
             ['จร', 'cr'], ['จล', 'cl'], ['ฉร', 'chr'],
             ['ตร', 'tr'], ['ตล', 'tl'], ['ถร', 'thr'], ['ทร', 'dr'], ['นน', 'nn'],
             ['ปร', 'pr'], ['ปล', 'pl'], ['ผล', 'phl'], ['พร', 'br'], ['พล', 'bl'],
+
+            ['ทห','dh̊'],['ปห','ph̊'],['กห','kh̊'],['คห','gh̊'],['จห','ch̊'],['ชห','jh̊'],['ฏห','ṭh̊'],['ตห','th̊'],['ฑห','ḍh̊'],['พห','bh̊'],['อห','xh̊'],['บห','p̥h̊'],['ฟห','b̥h̊'],['ดห','t̥h̊'],
             
             ['ก', 'k'], ['ข', 'kh'], ['ค', 'g'],['ฃ', 'k̥h'], ['ฅ', 'g̥h'], ['ฆ', 'gh'], ['ง', 'ɲ'],
             ['จ', 'c'], ['ฉ', 'ch'], ['ช', 'j'], ['ฌ', 'jh'], ['ญ', 'ɳ'],
@@ -664,7 +669,7 @@
             ['ต', 't'], ['ถ', 'th'], ['ท', 'd'], ['ธ', 'dh'], ['น', 'n'],
             ['ป', 'p'], ['ผ', 'ph'], ['พ', 'b'], ['ภ', 'bh'], ['ม', 'm'],
             ['ย', 'y'], ['ร', 'r'], ['ล', 'l'], ['ว', 'v'],
-            ['ส', 's'], ['ห', 'h'], ['ฬ', 'ḷ'], ['อ', 'x'],
+            ['ส', 's'], ['ห', 'h̊'], ['ฬ', 'ḷ'], ['อ', 'x'],
             ['ํ', 'ṃ'], ['ฯ', 'ฯ'],
             ['ศ', 'z̥'], ['ษ', 'z'], ['ฮ', 'xh'],
             ['บ', 'p̥'], ['ฟ', 'b̥'], ['ฝ', 'p̥h'],
@@ -855,5 +860,20 @@
             });
         });
     </script>
+
+<script>
+  // Register Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, err => {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+    });
+}
+</script>
+
 </body>
 </html>
