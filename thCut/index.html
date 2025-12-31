@@ -2,250 +2,194 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
     <meta name="theme-color" content="#4a90e2">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Thai Tokenizer App</title>
     
-    <!-- PWA Manifest (Data URI for Single File Demo) -->
-    <!-- ในส่วน <head> ของไฟล์ HTML -->
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
 
     <style>
+        /* --- Styles เดิม (รักษา UI เดิม) --- */
         :root {
-            --primary: #4a90e2;
-            --primary-dark: #357abd;
-            --success: #34c759; /* iOS Green */
-            --warning: #ffcc00;
-            --danger: #ff3b30; /* iOS Red */
-            --bg-app: #f2f2f7;  /* iOS System Gray */
-            --bg-card: #ffffff;
-            --text-main: #1c1c1e;
-            --text-sec: #8e8e93;
-            --radius: 16px;
-            --shadow: 0 4px 12px rgba(0,0,0,0.06);
+            --primary: #4a90e2; --primary-dark: #357abd;
+            --success: #34c759; --warning: #ffcc00; --danger: #ff3b30;
+            --bg-app: #f2f2f7;  --bg-card: #ffffff;
+            --text-main: #1c1c1e; --text-sec: #8e8e93;
+            --radius: 16px; --shadow: 0 4px 12px rgba(0,0,0,0.06);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Sarabun', 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-app);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            padding-bottom: 40px; /* Space for scroll */
+            background-color: var(--bg-app); color: var(--text-main);
+            margin: 0; padding: 0;
+            min-height: 100vh; padding-bottom: 120px; 
         }
 
-        /* --- Header (App Bar) --- */
         header {
-            background: var(--primary);
-            color: white;
-            padding: 15px 20px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            background: var(--primary); color: white; padding: 15px 20px;
+            position: sticky; top: 0; z-index: 100;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
         .header-actions button {
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            margin-left: 5px;
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; margin-left: 5px;
         }
 
-        /* --- Layout --- */
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 15px;
-        }
+        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
 
-        /* --- Cards --- */
         .card {
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-            border: none;
+            background: var(--bg-card); border-radius: var(--radius);
+            padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); border: none;
         }
 
         .card-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 15px;
-            color: var(--primary);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;
+            color: var(--primary); display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* --- Forms & Inputs --- */
         input[type="text"], textarea {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #e5e5ea;
-            border-radius: 12px;
-            font-size: 16px; /* Prevent Zoom on iOS */
-            background: #f9f9f9;
-            transition: all 0.2s;
-            font-family: inherit;
+            width: 100%; padding: 14px; border: 1px solid #e5e5ea;
+            border-radius: 12px; font-size: 16px; background: #f9f9f9;
+            transition: all 0.2s; font-family: inherit;
         }
 
         input[type="text"]:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: #fff;
+            outline: none; border-color: var(--primary); background: #fff;
             box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.15);
         }
 
         textarea { height: 120px; resize: none; }
 
-        /* --- Search Box --- */
-        .search-wrapper {
-            position: relative;
-            margin-bottom: 15px;
-        }
-        
-        .search-status {
-            font-size: 0.9rem;
-            margin-top: 8px;
-            min-height: 20px;
-            font-weight: 500;
-        }
+        .search-wrapper { position: relative; margin-bottom: 15px; }
+        .search-status { font-size: 0.9rem; margin-top: 8px; min-height: 20px; font-weight: 500; }
         .text-success { color: var(--success); }
         .text-primary { color: var(--primary); }
         .text-danger { color: var(--danger); }
 
-        /* --- Buttons --- */
         .btn {
-            border: none;
-            border-radius: 12px;
-            padding: 12px 20px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: transform 0.1s, opacity 0.2s;
-            width: 100%; /* Mobile First: Full Width */
+            border: none; border-radius: 12px; padding: 12px 20px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; transition: transform 0.1s, opacity 0.2s; width: 100%;
         }
-        
         .btn:active { transform: scale(0.98); }
-        
         .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3); }
         .btn-success { background-color: var(--success); color: white; }
         .btn-warning { background-color: var(--warning); color: #333; }
         .btn-danger { background-color: #fff; color: var(--danger); border: 1px solid var(--danger); padding: 8px 15px; font-size: 0.9rem;}
         
-        .btn-row {
-            display: flex;
-            gap: 10px;
-        }
+        .btn-row { display: flex; gap: 10px; }
         
-        /* --- Tag List --- */
         .tag-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 15px;
-            max-height: 220px;
-            overflow-y: auto;
-            padding: 5px;
-            -webkit-overflow-scrolling: touch;
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;
+            max-height: 220px; overflow-y: auto; padding: 5px; -webkit-overflow-scrolling: touch;
         }
-
         .tag {
-            background-color: #eef1f5;
-            color: var(--text-main);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            border: 1px solid transparent;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            background-color: #eef1f5; color: var(--text-main); padding: 6px 12px;
+            border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center;
+            border: 1px solid transparent; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-
-        /* Animation Highligth */
         .tag.highlight {
-            background-color: var(--warning) !important;
-            color: #000 !important;
-            transform: scale(1.15);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 10;
+            background-color: var(--warning) !important; color: #000 !important;
+            transform: scale(1.15); box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 10;
         }
+        .tag .remove { margin-left: 8px; color: var(--text-sec); font-weight: bold; padding: 2px 6px; }
 
-        .tag .remove {
-            margin-left: 8px;
-            color: var(--text-sec);
-            font-weight: bold;
-            padding: 2px 6px;
-        }
-
-        /* --- Result Token --- */
         #output {
-            line-height: 1.8;
-            font-size: 1.1rem;
-            min-height: 80px;
-            background: #fafafa;
-            border-radius: 12px;
-            padding: 15px;
-            border: 1px dashed #ccc;
+            line-height: 1.8; font-size: 1.1rem; min-height: 80px;
+            background: #fafafa; border-radius: 12px; padding: 15px; border: 1px dashed #ccc;
         }
-        
         .token {
-            display: inline-block;
-            margin: 2px;
-            padding: 2px 6px;
-            background: #eef6ff;
-            color: var(--primary-dark);
-            border-radius: 6px;
-            border-bottom: 2px solid #dae8f9;
+            display: inline-block; margin: 2px; padding: 2px 6px;
+            background: #eef6ff; color: var(--primary-dark);
+            border-radius: 6px; border-bottom: 2px solid #dae8f9;
+            user-select: none; cursor: pointer;
         }
         .token.unknown {
-            background: #fff5f5;
-            color: var(--danger);
-            border-bottom-color: #ffe0e0;
-            cursor: pointer;
+            background: #fff5f5; color: var(--danger); border-bottom-color: #ffe0e0;
+        }
+        
+        /* Highlight Word Builder */
+        .token.selected-build {
+            background-color: var(--primary) !important; color: white !important;
+            border-bottom-color: var(--primary-dark) !important;
+            box-shadow: 0 2px 5px rgba(74, 144, 226, 0.4); transform: translateY(-1px);
         }
 
-        /* --- Floating Action Button (Optional for Add) or Bottom Bar? 
-           Let's keep it simple with clear sections --- */
+        /* Floating Bar */
+        #quickAddBar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 15px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            border-top-left-radius: 20px; border-top-right-radius: 20px;
+            z-index: 9999;
+            transform: translateY(120%); 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), bottom 0.1s;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        #quickAddBar.active { transform: translateY(0); }
 
-        /* Responsive Desktop */
+        .quick-bar-content { display: flex; gap: 10px; align-items: center; }
+
+        .close-floater {
+            position: absolute; top: -12px; right: 15px;
+            background: #333; color: white; width: 24px; height: 24px;
+            border-radius: 50%; text-align: center; line-height: 24px;
+            font-size: 14px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* --- NEW: Notification Toast --- */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: rgba(30, 30, 30, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            padding: 12px 20px;
+            position: fixed;
+            z-index: 10000;
+            left: 50%;
+            top: 30px; /* แสดงด้านบน */
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s, top 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            top: 40px; /* Animation เลื่อนลงเล็กน้อย */
+        }
+
         @media (min-width: 768px) {
             .btn { width: auto; }
             .container { padding-top: 30px; }
             .card { padding: 30px; }
+            #quickAddBar {
+                left: 50%; transform: translate(-50%, 120%);
+                width: 90%; max-width: 600px; bottom: 20px; border-radius: 20px;
+            }
+            #quickAddBar.active { transform: translate(-50%, 0); }
         }
     </style>
 </head>
 <body>
 
-<!-- Header (Sticky) -->
 <header>
     <h1>✂️ Thai Tokenizer</h1>
     <div class="header-actions">
-        <!-- Hidden File Input -->
         <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJson(this)">
         <button onclick="document.getElementById('importFile').click()">Import</button>
         <button onclick="exportJson()">Backup</button>
@@ -253,8 +197,7 @@
 </header>
 
 <div class="container">
-
-    <!-- Card 1: Tokenizer (Action First) -->
+    <!-- Card 1 -->
     <div class="card">
         <div class="card-title">
             <span>🔎 พื้นที่ตัดคำ</span>
@@ -267,66 +210,64 @@
         <button class="btn btn-primary" onclick="processText()">⚡ เริ่มตัดคำ (Tokenize)</button>
         
         <div style="margin-top: 20px;">
-            <label style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 5px; display:block;">ผลลัพธ์:</label>
+            <label style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 5px; display:block;">
+                ผลลัพธ์ (แตะเพื่อรวมคำสร้างคำใหม่):
+            </label>
             <div id="output">
                 <span style="color: #ccc;">ผลลัพธ์จะปรากฏที่นี่...</span>
             </div>
         </div>
     </div>
 
-    <!-- Card 2: Dictionary Management -->
+    <!-- Card 2 -->
     <div class="card">
         <div class="card-title">
             <span>📚 จัดการคำศัพท์ <span id="countDisplay" style="font-size: 0.8rem; font-weight: normal; color: #888;">(0)</span></span>
             <button class="btn btn-danger" onclick="resetDictionary()">Reset</button>
         </div>
 
-        <!-- Search -->
         <div class="search-wrapper">
             <input type="text" id="searchInput" placeholder="🔍 ค้นหาคำในระบบ..." onkeyup="checkWord()">
             <div id="searchStatus" class="search-status"></div>
         </div>
 
-        <!-- Add Word -->
         <div class="btn-row">
             <input type="text" id="newWordInput" placeholder="➕ เพิ่มคำใหม่..." onkeypress="handleEnter(event)">
             <button class="btn btn-success" onclick="addNewWord()" style="width: auto; min-width: 80px;">เพิ่ม</button>
         </div>
 
-        <!-- List -->
-        <div id="userWordList" class="tag-list">
-            <!-- Tags rendered via JS -->
-        </div>
+        <div id="userWordList" class="tag-list"></div>
     </div>
-
 </div>
 
+<!-- Floating Quick Add Bar (Word Builder) -->
+<div id="quickAddBar">
+    <div class="close-floater" onclick="closeFloatingBar()">×</div>
+    <div style="font-size: 0.9rem; color: var(--primary); font-weight: bold;">
+        💡 สร้างคำใหม่ (แตะเพิ่มเพื่อต่อคำ)
+    </div>
+    <div class="quick-bar-content">
+        <input type="text" id="floatInput" placeholder="แตะที่ผลลัพธ์เพื่อรวมคำ..." onkeypress="handleFloatEnter(event)" autocomplete="off">
+        <button class="btn btn-success" onclick="confirmFloatingAdd()" style="width: 100px;">บันทึก</button>
+    </div>
+</div>
+
+<!-- Notification Toast Element -->
+<div id="toast">แจ้งเตือน</div>
+
 <script>
-    /* --- LOGIC: รักษาฟังก์ชันเดิมไว้ 100% --- */
-
-    const defaultWordsList = [
-        "พ่อ", "แม่", "ปู่", "ย่า", "ตา", "ยาย", "ลุง", "ป้า", "น้า", "อา", 
-        "กิน", "เดิน", "นั่ง", "นอน", "ไป", "มา", "หา", "สู่", "รัก", "ชอบ",
-        "คน", "สัตว์", "สิ่ง", "ของ", "โรง", "เรียน", "งาน", "การ", "มี", "ใจ",
-        "สวัสดี", "ขอบคุณ", "ครับ", "ค่ะ"
-    ];
-
+    const defaultWordsList = ["พ่อ","แม่","ปู่","ย่า","ตา","ยาย","ลุง","ป้า","น้า","อา","กิน","เดิน","นั่ง","นอน","ไป","มา","หา","สู่","รัก","ชอบ","คน","สัตว์","สิ่ง","ของ","โรง","เรียน","งาน","การ","มี","ใจ","สวัสดี","ขอบคุณ","ครับ","ค่ะ"];
     let defaultWordsSet = new Set(defaultWordsList);
     let userWords = new Set();
     let allWords = new Set();
     let currentTokens = [];
 
-    // Init
     function init() {
         const savedData = localStorage.getItem('thaiDictPWA_v8');
         if (savedData) {
-            try {
-                const arr = JSON.parse(savedData);
-                arr.forEach(w => userWords.add(w));
-            } catch(e) {}
+            try { const arr = JSON.parse(savedData); arr.forEach(w => userWords.add(w)); } catch(e) {}
         }
-        refreshAllWords();
-        renderUserTags();
+        refreshAllWords(); renderUserTags(); setupVisualViewport();
     }
 
     function refreshAllWords() {
@@ -334,20 +275,14 @@
         document.getElementById('countDisplay').innerText = `(${userWords.size} คำเพิ่มเอง)`;
     }
 
-    // --- Search & Highlight ---
+    // --- Core Logic ---
     function checkWord() {
         const input = document.getElementById('searchInput');
         const statusDiv = document.getElementById('searchStatus');
         const word = input.value.trim();
-
-        if (!word) {
-            statusDiv.innerHTML = "";
-            return;
-        }
-
+        if (!word) { statusDiv.innerHTML = ""; return; }
         if (userWords.has(word)) {
-            statusDiv.innerHTML = `<span class="text-success">✅ พบในรายการของคุณ</span>`;
-            scrollToWord(word);
+            statusDiv.innerHTML = `<span class="text-success">✅ พบในรายการของคุณ</span>`; scrollToWord(word);
         } else if (defaultWordsSet.has(word)) {
             statusDiv.innerHTML = `<span class="text-primary">🔹 เป็นคำพื้นฐานของระบบ</span>`;
         } else {
@@ -364,23 +299,27 @@
         }
     }
 
-    // --- Dict Management ---
     function addNewWord() {
         const input = document.getElementById('newWordInput');
         const word = input.value.trim();
-        if (!word) return;
-
-        if (allWords.has(word)) {
-            alert("มีคำนี้อยู่แล้วครับ");
-            if(userWords.has(word)) scrollToWord(word);
-            return;
+        // การเพิ่มคำผ่านช่องปกติ ยังคงให้ Scroll ไปหาคำนั้น (True)
+        if (addWordToSet(word, true)) {
+             input.value = '';
+             if(document.getElementById('searchInput').value === word) checkWord();
         }
-
+    }
+    
+    // Updated: เพิ่ม Parameter 'shouldScroll'
+    function addWordToSet(word, shouldScroll = true) {
+        if (!word) return false;
+        if (allWords.has(word)) {
+            if(shouldScroll) { alert("มีคำนี้อยู่แล้วครับ"); if(userWords.has(word)) scrollToWord(word); }
+            return false;
+        }
         userWords.add(word);
         saveAndRefresh();
-        input.value = '';
-        if(document.getElementById('searchInput').value === word) checkWord();
-        setTimeout(() => scrollToWord(word), 100);
+        if (shouldScroll) { setTimeout(() => scrollToWord(word), 100); }
+        return true;
     }
 
     function removeWord(word) {
@@ -393,8 +332,7 @@
 
     function saveAndRefresh() {
         localStorage.setItem('thaiDictPWA_v8', JSON.stringify([...userWords]));
-        refreshAllWords();
-        renderUserTags();
+        refreshAllWords(); renderUserTags();
         if(document.getElementById('inputText').value) processText();
     }
 
@@ -405,51 +343,15 @@
             container.innerHTML = '<div style="width:100%; text-align:center; color:#ccc; padding:20px;">ยังไม่มีข้อมูล</div>';
             return;
         }
-        
         const sorted = [...userWords].sort((a,b) => a.localeCompare(b, 'th'));
         const fragment = document.createDocumentFragment();
-
         sorted.forEach(word => {
             const div = document.createElement('div');
-            div.className = 'tag';
-            div.setAttribute('data-word', word);
-            div.innerHTML = `
-                ${word} 
-                <span class="remove" onclick="removeWord('${word}')">×</span>
-            `;
+            div.className = 'tag'; div.setAttribute('data-word', word);
+            div.innerHTML = `${word} <span class="remove" onclick="removeWord('${word}')">×</span>`;
             fragment.appendChild(div);
         });
         container.appendChild(fragment);
-    }
-
-    // --- Import/Export ---
-    function exportJson() {
-        if (userWords.size === 0) { alert("ไม่มีข้อมูลให้ Backup"); return; }
-        const data = { type: "thai-tokenizer-pwa", date: new Date(), words: [...userWords] };
-        downloadFile("thai_dict_backup.json", JSON.stringify(data, null, 2), "application/json");
-    }
-
-    function importJson(input) {
-        const file = input.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-            try {
-                const json = JSON.parse(e.target.result);
-                const list = Array.isArray(json) ? json : (json.words || []);
-                let count = 0;
-                list.forEach(w => {
-                    if(typeof w === 'string' && w.trim() && !allWords.has(w.trim())) {
-                        userWords.add(w.trim());
-                        count++;
-                    }
-                });
-                if(count > 0) { saveAndRefresh(); alert(`นำเข้าสำเร็จ ${count} คำ`); }
-                else { alert("ไม่พบคำใหม่"); }
-            } catch(err) { alert("ไฟล์ไม่ถูกต้อง"); }
-            input.value = '';
-        };
-        reader.readAsText(file);
     }
 
     // --- Tokenizer ---
@@ -457,31 +359,22 @@
         const text = document.getElementById('inputText').value.trim();
         const out = document.getElementById('output');
         const btn = document.getElementById('dlBtn');
-
         if(!text) {
-            out.innerHTML = '<span style="color:#ccc">รอข้อความ...</span>';
-            btn.style.display = 'none';
-            currentTokens = [];
-            return;
+            out.innerHTML = '<span style="color:#ccc">รอข้อความ...</span>'; btn.style.display = 'none'; currentTokens = []; return;
         }
-
         currentTokens = tokenize(text);
         let html = '';
         currentTokens.forEach(t => {
-            if(allWords.has(t)) html += `<span class="token">${t}</span>`;
-            else html += `<span class="token unknown" onclick="quickAdd('${t}')">${t}</span>`;
+            const cls = allWords.has(t) ? 'token' : 'token unknown';
+            html += `<span class="${cls}" onclick="handleTokenClick(this, '${t}')">${t}</span>`;
         });
-        out.innerHTML = html;
-        btn.style.display = 'inline-block';
+        out.innerHTML = html; btn.style.display = 'inline-block';
     }
 
     function tokenize(text) {
-        let res = [];
-        let cursor = 0;
-        const len = text.length;
+        let res = []; let cursor = 0; const len = text.length;
         while(cursor < len) {
-            let found = null;
-            let max = 40;
+            let found = null; let max = 40;
             for(let i=max; i>0; i--) {
                 if(cursor+i > len) continue;
                 let sub = text.substr(cursor, i);
@@ -493,40 +386,113 @@
         return res;
     }
 
-    function quickAdd(word) {
-        document.getElementById('newWordInput').value = word;
-        document.getElementById('searchInput').value = word;
-        checkWord(); // update status
-        document.getElementById('newWordInput').focus();
-    }
-
-    function saveResultText() {
-        if(currentTokens.length) downloadFile("result.txt", currentTokens.join(" "), "text/plain");
-    }
-
+    function saveResultText() { if(currentTokens.length) downloadFile("result.txt", currentTokens.join(" "), "text/plain"); }
     function downloadFile(name, content, type) {
-        const a = document.createElement("a");
-        const blob = new Blob([content], {type: type});
-        a.href = URL.createObjectURL(blob);
-        a.download = name;
-        a.click();
+        const a = document.createElement("a"); const blob = new Blob([content], {type: type});
+        a.href = URL.createObjectURL(blob); a.download = name; a.click();
     }
-
     function handleEnter(e) { if(e.key === 'Enter') addNewWord(); }
     function resetDictionary() {
         if(confirm("ล้างข้อมูลคำศัพท์ทั้งหมด?")) {
-            userWords.clear();
-            localStorage.removeItem('thaiDictPWA_v8');
-            refreshAllWords();
-            renderUserTags();
-            processText();
+            userWords.clear(); localStorage.removeItem('thaiDictPWA_v8');
+            refreshAllWords(); renderUserTags(); processText();
+        }
+    }
+    function exportJson() {
+        if (userWords.size === 0) { alert("ไม่มีข้อมูลให้ Backup"); return; }
+        const data = { type: "thai-tokenizer-pwa", date: new Date(), words: [...userWords] };
+        downloadFile("thai_dict_backup.json", JSON.stringify(data, null, 2), "application/json");
+    }
+    function importJson(input) {
+        const file = input.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const json = JSON.parse(e.target.result);
+                const list = Array.isArray(json) ? json : (json.words || []);
+                let count = 0;
+                list.forEach(w => {
+                    if(typeof w === 'string' && w.trim() && !allWords.has(w.trim())) {
+                        userWords.add(w.trim()); count++;
+                    }
+                });
+                if(count > 0) { saveAndRefresh(); alert(`นำเข้าสำเร็จ ${count} คำ`); }
+                else { alert("ไม่พบคำใหม่"); }
+            } catch(err) { alert("ไฟล์ไม่ถูกต้อง"); }
+            input.value = '';
+        };
+        reader.readAsText(file);
+    }
+    
+    // --- Word Builder & Toast Logic ---
+
+    function handleTokenClick(element, word) {
+        const bar = document.getElementById('quickAddBar');
+        const input = document.getElementById('floatInput');
+        const isActive = bar.classList.contains('active');
+        element.classList.add('selected-build');
+        if (!isActive) {
+            input.value = word; bar.classList.add('active');
+            if(window.innerWidth > 768) input.focus();
+        } else {
+            input.value = input.value + word;
+            input.style.backgroundColor = "#eef6ff";
+            setTimeout(() => input.style.backgroundColor = "", 200);
         }
     }
 
-    // Start
+    function confirmFloatingAdd() {
+        const input = document.getElementById('floatInput');
+        const word = input.value.trim();
+        
+        // ส่ง false ไปเพื่อบอกว่า "ไม่ต้อง Scroll นะ" (เดี๋ยวแจ้งเตือนเอง)
+        if(word && addWordToSet(word, false)) {
+            // แสดง Toast Notification
+            showToast(`เพิ่มคำ "${word}" แล้ว เป็นลำดับที่ ${userWords.size}`);
+            closeFloatingBar();
+        } else if (!word) {
+            closeFloatingBar();
+        }
+    }
+
+    function showToast(message) {
+        const t = document.getElementById("toast");
+        t.innerText = message;
+        t.classList.add("show");
+        // ซ่อนหลังจาก 3 วินาที
+        setTimeout(function(){ t.classList.remove("show"); }, 3000);
+    }
+
+    function closeFloatingBar() {
+        const bar = document.getElementById('quickAddBar');
+        bar.classList.remove('active'); bar.style.bottom = '0px';
+        document.getElementById('floatInput').blur();
+        document.querySelectorAll('.token.selected-build').forEach(el => {
+            el.classList.remove('selected-build');
+        });
+    }
+
+    function handleFloatEnter(e) { if(e.key==='Enter') confirmFloatingAdd(); }
+
+    function setupVisualViewport() {
+        if (!window.visualViewport) return;
+        const bar = document.getElementById('quickAddBar');
+        function handleResize() {
+            if (!bar.classList.contains('active') || window.innerWidth >= 768) return;
+            const offset = window.innerHeight - window.visualViewport.height;
+            if (offset > 100) bar.style.bottom = `${offset - window.visualViewport.offsetTop}px`;
+            else bar.style.bottom = '0px';
+        }
+        window.visualViewport.addEventListener('resize', handleResize);
+        window.visualViewport.addEventListener('scroll', handleResize);
+        document.getElementById('floatInput').addEventListener('blur', () => { 
+            setTimeout(() => { bar.style.bottom = '0px'; }, 100); 
+        });
+    }
+
     init();
 
-</script>
+    </script>
 
 <script>
   // Register Service Worker
@@ -539,7 +505,7 @@ if ('serviceWorker' in navigator) {
                 console.log('ServiceWorker registration failed: ', err);
             });
     });
-    }
+}
 </script>
 
 </body>
