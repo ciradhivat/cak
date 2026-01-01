@@ -1,4 +1,4 @@
-const CACHE_NAME = 'thai-tokenizer-v2';
+const CACHE_NAME = 'thai-tokenizer-v3';
 const ASSETS = [
   './',
   './index.html',

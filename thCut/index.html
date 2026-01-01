@@ -12,7 +12,7 @@
     <link rel="apple-touch-icon" href="icon-192.png">
 
     <style>
-        /* --- Styles เดิม (รักษา UI เดิม) --- */
+        /* --- Styles เดิม --- */
         :root {
             --primary: #4a90e2; --primary-dark: #357abd;
             --success: #34c759; --warning: #ffcc00; --danger: #ff3b30;
@@ -54,6 +54,18 @@
             font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;
             color: var(--primary); display: flex; justify-content: space-between; align-items: center;
         }
+
+        /* ปุ่มควบคุมขนาดตัวอักษร */
+        .font-controls {
+            display: flex; gap: 5px; margin-left: auto; margin-right: 10px;
+        }
+        .font-btn {
+            background: #f0f0f5; border: 1px solid #d1d1d6; color: #333;
+            width: 32px; height: 32px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .font-btn:active { background: #e5e5ea; transform: scale(0.95); }
 
         input[type="text"], textarea {
             width: 100%; padding: 14px; border: 1px solid #e5e5ea;
@@ -104,8 +116,10 @@
         .tag .remove { margin-left: 8px; color: var(--text-sec); font-weight: bold; padding: 2px 6px; }
 
         #output {
-            line-height: 1.8; font-size: 1.1rem; min-height: 80px;
+            line-height: 1.8; font-size: 1.1rem; /* Default Font Size */
+            min-height: 80px;
             background: #fafafa; border-radius: 12px; padding: 15px; border: 1px dashed #ccc;
+            transition: font-size 0.2s;
         }
         .token {
             display: inline-block; margin: 2px; padding: 2px 6px;
@@ -146,32 +160,14 @@
             font-size: 14px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* --- NEW: Notification Toast --- */
         #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: rgba(30, 30, 30, 0.9);
-            color: #fff;
-            text-align: center;
-            border-radius: 50px;
-            padding: 12px 20px;
-            position: fixed;
-            z-index: 10000;
-            left: 50%;
-            top: 30px; /* แสดงด้านบน */
-            transform: translateX(-50%);
-            font-size: 0.9rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            opacity: 0;
-            transition: opacity 0.3s, top 0.3s;
-            backdrop-filter: blur(5px);
+            visibility: hidden; min-width: 250px; background-color: rgba(30, 30, 30, 0.9);
+            color: #fff; text-align: center; border-radius: 50px; padding: 12px 20px;
+            position: fixed; z-index: 10000; left: 50%; top: 30px; transform: translateX(-50%);
+            font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            opacity: 0; transition: opacity 0.3s, top 0.3s; backdrop-filter: blur(5px);
         }
-
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-            top: 40px; /* Animation เลื่อนลงเล็กน้อย */
-        }
+        #toast.show { visibility: visible; opacity: 1; top: 40px; }
 
         @media (min-width: 768px) {
             .btn { width: auto; }
@@ -201,6 +197,11 @@
     <div class="card">
         <div class="card-title">
             <span>🔎 พื้นที่ตัดคำ</span>
+            <!-- NEW: Font Size Controls -->
+            <div class="font-controls">
+                <button class="font-btn" onclick="adjustFontSize(-2)">A-</button>
+                <button class="font-btn" onclick="adjustFontSize(2)">A+</button>
+            </div>
             <button id="dlBtn" class="btn btn-warning" onclick="saveResultText()" style="display:none; padding: 6px 12px; font-size: 0.85rem;">
                 📥 .txt
             </button>
@@ -211,7 +212,7 @@
         
         <div style="margin-top: 20px;">
             <label style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 5px; display:block;">
-                ผลลัพธ์ (แตะเพื่อรวมคำสร้างคำใหม่):
+                ผลลัพธ์ (แตะหน้า-หลัง เพื่อคลุมคำ):
             </label>
             <div id="output">
                 <span style="color: #ccc;">ผลลัพธ์จะปรากฏที่นี่...</span>
@@ -240,11 +241,11 @@
     </div>
 </div>
 
-<!-- Floating Quick Add Bar (Word Builder) -->
+<!-- Floating Quick Add Bar -->
 <div id="quickAddBar">
     <div class="close-floater" onclick="closeFloatingBar()">×</div>
     <div style="font-size: 0.9rem; color: var(--primary); font-weight: bold;">
-        💡 สร้างคำใหม่ (แตะเพิ่มเพื่อต่อคำ)
+        💡 สร้างคำใหม่ (เลือกช่วงคำอัตโนมัติ)
     </div>
     <div class="quick-bar-content">
         <input type="text" id="floatInput" placeholder="แตะที่ผลลัพธ์เพื่อรวมคำ..." onkeypress="handleFloatEnter(event)" autocomplete="off">
@@ -252,7 +253,6 @@
     </div>
 </div>
 
-<!-- Notification Toast Element -->
 <div id="toast">แจ้งเตือน</div>
 
 <script>
@@ -261,6 +261,9 @@
     let userWords = new Set();
     let allWords = new Set();
     let currentTokens = [];
+    
+    // NEW: Variable for Range Selection
+    let selectionStartIndex = -1; // -1 means no selection started
 
     function init() {
         const savedData = localStorage.getItem('thaiDictPWA_v8');
@@ -275,7 +278,6 @@
         document.getElementById('countDisplay').innerText = `(${userWords.size} คำเพิ่มเอง)`;
     }
 
-    // --- Core Logic ---
     function checkWord() {
         const input = document.getElementById('searchInput');
         const statusDiv = document.getElementById('searchStatus');
@@ -302,14 +304,12 @@
     function addNewWord() {
         const input = document.getElementById('newWordInput');
         const word = input.value.trim();
-        // การเพิ่มคำผ่านช่องปกติ ยังคงให้ Scroll ไปหาคำนั้น (True)
         if (addWordToSet(word, true)) {
              input.value = '';
              if(document.getElementById('searchInput').value === word) checkWord();
         }
     }
     
-    // Updated: เพิ่ม Parameter 'shouldScroll'
     function addWordToSet(word, shouldScroll = true) {
         if (!word) return false;
         if (allWords.has(word)) {
@@ -354,7 +354,7 @@
         container.appendChild(fragment);
     }
 
-    // --- Tokenizer ---
+    // --- Tokenizer with Index ---
     function processText() {
         const text = document.getElementById('inputText').value.trim();
         const out = document.getElementById('output');
@@ -364,9 +364,11 @@
         }
         currentTokens = tokenize(text);
         let html = '';
-        currentTokens.forEach(t => {
+        // Updated Loop: Pass index (i)
+        currentTokens.forEach((t, i) => {
             const cls = allWords.has(t) ? 'token' : 'token unknown';
-            html += `<span class="${cls}" onclick="handleTokenClick(this, '${t}')">${t}</span>`;
+            // เพิ่ม data-index เพื่อใช้อ้างอิงเวลาเลือก Range
+            html += `<span class="${cls}" data-index="${i}" onclick="handleTokenClick(this, '${t}', ${i})">${t}</span>`;
         });
         out.innerHTML = html; btn.style.display = 'inline-block';
     }
@@ -424,31 +426,59 @@
         reader.readAsText(file);
     }
     
-    // --- Word Builder & Toast Logic ---
+    // --- NEW: Range Selection Logic ---
 
-    function handleTokenClick(element, word) {
+    function handleTokenClick(element, word, index) {
         const bar = document.getElementById('quickAddBar');
         const input = document.getElementById('floatInput');
         const isActive = bar.classList.contains('active');
-        element.classList.add('selected-build');
-        if (!isActive) {
-            input.value = word; bar.classList.add('active');
+
+        // กรณีที่ 1: แถบยังไม่เปิด หรือ กดเพื่อเริ่มเลือกใหม่ (Reset)
+        if (!isActive || selectionStartIndex === -1) {
+            selectionStartIndex = index; // ตั้งจุดเริ่มต้น
+            input.value = word;
+            bar.classList.add('active');
+            updateRangeVisuals(index, index); // ไฮไลท์แค่ตัวเดียว
             if(window.innerWidth > 768) input.focus();
-        } else {
-            input.value = input.value + word;
-            input.style.backgroundColor = "#eef6ff";
-            setTimeout(() => input.style.backgroundColor = "", 200);
+        } 
+        // กรณีที่ 2: แถบเปิดอยู่ และกดตัวถัดไป (Range Selection)
+        else {
+            // ถ้ากดตัวที่อยู่ *หลัง* จุดเริ่มต้น -> รวมคำตั้งแต่เริ่มถึงตัวนี้
+            if (index > selectionStartIndex) {
+                // ดึงคำทั้งหมดในช่วง
+                const rangeWords = currentTokens.slice(selectionStartIndex, index + 1);
+                input.value = rangeWords.join("");
+                updateRangeVisuals(selectionStartIndex, index);
+            }
+            // ถ้ากดตัวที่อยู่ *ก่อน* จุดเริ่มต้น -> ย้ายจุดเริ่มต้นมาที่นี่แทน
+            else if (index < selectionStartIndex) {
+                selectionStartIndex = index;
+                input.value = word;
+                updateRangeVisuals(index, index);
+            }
+            // ถ้ากดตัวเดิม -> ไม่ทำอะไร หรืออาจจะรีเซ็ตก็ได้ (ในที่นี้ปล่อยไว้)
+        }
+    }
+
+    // ฟังก์ชันช่วยไฮไลท์ช่วงคำ
+    function updateRangeVisuals(start, end) {
+        // ล้างไฮไลท์เก่าทั้งหมดก่อน
+        document.querySelectorAll('.token.selected-build').forEach(el => {
+            el.classList.remove('selected-build');
+        });
+
+        // ไฮไลท์ช่วงใหม่
+        for (let i = start; i <= end; i++) {
+            const el = document.querySelector(`.token[data-index="${i}"]`);
+            if(el) el.classList.add('selected-build');
         }
     }
 
     function confirmFloatingAdd() {
         const input = document.getElementById('floatInput');
         const word = input.value.trim();
-        
-        // ส่ง false ไปเพื่อบอกว่า "ไม่ต้อง Scroll นะ" (เดี๋ยวแจ้งเตือนเอง)
         if(word && addWordToSet(word, false)) {
-            // แสดง Toast Notification
-            showToast(`เพิ่มคำ "${word}" แล้ว เป็นลำดับที่ ${userWords.size}`);
+            showToast(`เพิ่มคำ "${word}" แล้ว (ลำดับที่ ${userWords.size})`);
             closeFloatingBar();
         } else if (!word) {
             closeFloatingBar();
@@ -456,10 +486,7 @@
     }
 
     function showToast(message) {
-        const t = document.getElementById("toast");
-        t.innerText = message;
-        t.classList.add("show");
-        // ซ่อนหลังจาก 3 วินาที
+        const t = document.getElementById("toast"); t.innerText = message; t.classList.add("show");
         setTimeout(function(){ t.classList.remove("show"); }, 3000);
     }
 
@@ -467,9 +494,24 @@
         const bar = document.getElementById('quickAddBar');
         bar.classList.remove('active'); bar.style.bottom = '0px';
         document.getElementById('floatInput').blur();
+        
+        // Reset Selection Variable
+        selectionStartIndex = -1;
+        
         document.querySelectorAll('.token.selected-build').forEach(el => {
             el.classList.remove('selected-build');
         });
+    }
+
+    // --- NEW: Font Size Adjuster ---
+    let currentFontSize = 1.1; // Default 1.1rem
+    function adjustFontSize(delta) {
+        // จำกัดขนาดไม่ให้เล็กหรือใหญ่เกินไป
+        const newSize = currentFontSize + (delta * 0.1);
+        if (newSize < 0.8 || newSize > 2.5) return;
+        
+        currentFontSize = newSize;
+        document.getElementById('output').style.fontSize = `${currentFontSize}rem`;
     }
 
     function handleFloatEnter(e) { if(e.key==='Enter') confirmFloatingAdd(); }
