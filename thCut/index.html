@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+    <meta name="theme-color" content="#4a90e2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Thai Tokenizer App</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <style>
+        /* --- Styles เดิม --- */
+        :root {
+            --primary: #4a90e2; --primary-dark: #357abd;
+            --success: #34c759; --warning: #ffcc00; --danger: #ff3b30;
+            --bg-app: #f2f2f7;  --bg-card: #ffffff;
+            --text-main: #1c1c1e; --text-sec: #8e8e93;
+            --radius: 16px; --shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Sarabun', 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-app); color: var(--text-main);
+            margin: 0; padding: 0;
+            min-height: 100vh; padding-bottom: 120px; 
+        }
+
+        header {
+            background: var(--primary); color: white; padding: 15px 20px;
+            position: sticky; top: 0; z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        header h1 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+        .header-actions button {
+            background: rgba(255,255,255,0.2); border: none; color: white;
+            padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; margin-left: 5px;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
+
+        .card {
+            background: var(--bg-card); border-radius: var(--radius);
+            padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow); border: none;
+        }
+
+        .card-title {
+            font-size: 1.1rem; font-weight: 700; margin-bottom: 15px;
+            color: var(--primary); display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* ปุ่มควบคุมขนาดตัวอักษร */
+        .font-controls {
+            display: flex; gap: 5px; margin-left: auto; margin-right: 10px;
+        }
+        .font-btn {
+            background: #f0f0f5; border: 1px solid #d1d1d6; color: #333;
+            width: 32px; height: 32px; border-radius: 8px;
+            font-size: 0.9rem; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .font-btn:active { background: #e5e5ea; transform: scale(0.95); }
+
+        input[type="text"], textarea {
+            width: 100%; padding: 14px; border: 1px solid #e5e5ea;
+            border-radius: 12px; font-size: 16px; background: #f9f9f9;
+            transition: all 0.2s; font-family: inherit;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none; border-color: var(--primary); background: #fff;
+            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.15);
+        }
+
+        textarea { height: 120px; resize: none; }
+
+        .search-wrapper { position: relative; margin-bottom: 15px; }
+        .search-status { font-size: 0.9rem; margin-top: 8px; min-height: 20px; font-weight: 500; }
+        .text-success { color: var(--success); }
+        .text-primary { color: var(--primary); }
+        .text-danger { color: var(--danger); }
+
+        .btn {
+            border: none; border-radius: 12px; padding: 12px 20px;
+            font-size: 1rem; font-weight: 600; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 8px; transition: transform 0.1s, opacity 0.2s; width: 100%;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: var(--primary); color: white; box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3); }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-warning { background-color: var(--warning); color: #333; }
+        .btn-danger { background-color: #fff; color: var(--danger); border: 1px solid var(--danger); padding: 8px 15px; font-size: 0.9rem;}
+        
+        .btn-row { display: flex; gap: 10px; }
+        
+        .tag-list {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;
+            max-height: 220px; overflow-y: auto; padding: 5px; -webkit-overflow-scrolling: touch;
+        }
+        .tag {
+            background-color: #eef1f5; color: var(--text-main); padding: 6px 12px;
+            border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center;
+            border: 1px solid transparent; transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .tag.highlight {
+            background-color: var(--warning) !important; color: #000 !important;
+            transform: scale(1.15); box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 10;
+        }
+        .tag .remove { margin-left: 8px; color: var(--text-sec); font-weight: bold; padding: 2px 6px; }
+
+        #output {
+            line-height: 1.8; font-size: 1.1rem; /* Default Font Size */
+            min-height: 80px;
+            background: #fafafa; border-radius: 12px; padding: 15px; border: 1px dashed #ccc;
+            transition: font-size 0.2s;
+        }
+        .token {
+            display: inline-block; margin: 2px; padding: 2px 6px;
+            background: #eef6ff; color: var(--primary-dark);
+            border-radius: 6px; border-bottom: 2px solid #dae8f9;
+            user-select: none; cursor: pointer;
+        }
+        .token.unknown {
+            background: #fff5f5; color: var(--danger); border-bottom-color: #ffe0e0;
+        }
+        
+        /* Highlight Word Builder */
+        .token.selected-build {
+            background-color: var(--primary) !important; color: white !important;
+            border-bottom-color: var(--primary-dark) !important;
+            box-shadow: 0 2px 5px rgba(74, 144, 226, 0.4); transform: translateY(-1px);
+        }
+
+        /* Floating Bar */
+        #quickAddBar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: white; padding: 15px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            border-top-left-radius: 20px; border-top-right-radius: 20px;
+            z-index: 9999;
+            transform: translateY(120%); 
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), bottom 0.1s;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        #quickAddBar.active { transform: translateY(0); }
+
+        .quick-bar-content { display: flex; gap: 10px; align-items: center; }
+
+        .close-floater {
+            position: absolute; top: -12px; right: 15px;
+            background: #333; color: white; width: 24px; height: 24px;
+            border-radius: 50%; text-align: center; line-height: 24px;
+            font-size: 14px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        #toast {
+            visibility: hidden; min-width: 250px; background-color: rgba(30, 30, 30, 0.9);
+            color: #fff; text-align: center; border-radius: 50px; padding: 12px 20px;
+            position: fixed; z-index: 10000; left: 50%; top: 30px; transform: translateX(-50%);
+            font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            opacity: 0; transition: opacity 0.3s, top 0.3s; backdrop-filter: blur(5px);
+        }
+        #toast.show { visibility: visible; opacity: 1; top: 40px; }
+
+        @media (min-width: 768px) {
+            .btn { width: auto; }
+            .container { padding-top: 30px; }
+            .card { padding: 30px; }
+            #quickAddBar {
+                left: 50%; transform: translate(-50%, 120%);
+                width: 90%; max-width: 600px; bottom: 20px; border-radius: 20px;
+            }
+            #quickAddBar.active { transform: translate(-50%, 0); }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>✂️ Thai Tokenizer</h1>
+    <div class="header-actions">
+        <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJson(this)">
+        <button onclick="document.getElementById('importFile').click()">Import</button>
+        <button onclick="exportJson()">Backup</button>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Card 1 -->
+    <div class="card">
+        <div class="card-title">
+            <span>🔎 พื้นที่ตัดคำ</span>
+            <!-- NEW: Font Size Controls -->
+            <div class="font-controls">
+                <button class="font-btn" onclick="adjustFontSize(-2)">A-</button>
+                <button class="font-btn" onclick="adjustFontSize(2)">A+</button>
+            </div>
+            <button id="dlBtn" class="btn btn-warning" onclick="saveResultText()" style="display:none; padding: 6px 12px; font-size: 0.85rem;">
+                📥 .txt
+            </button>
+        </div>
+        
+        <textarea id="inputText" placeholder="พิมพ์ข้อความภาษาไทยที่นี่..."></textarea>
+        <button class="btn btn-primary" onclick="processText()">⚡ เริ่มตัดคำ (Tokenize)</button>
+        
+        <div style="margin-top: 20px;">
+            <label style="font-size: 0.9rem; color: var(--text-sec); margin-bottom: 5px; display:block;">
+                ผลลัพธ์ (แตะหน้า-หลัง เพื่อคลุมคำ):
+            </label>
+            <div id="output">
+                <span style="color: #ccc;">ผลลัพธ์จะปรากฏที่นี่...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="card">
+        <div class="card-title">
+            <span>📚 จัดการคำศัพท์ <span id="countDisplay" style="font-size: 0.8rem; font-weight: normal; color: #888;">(0)</span></span>
+            <button class="btn btn-danger" onclick="resetDictionary()">Reset</button>
+        </div>
+
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" placeholder="🔍 ค้นหาคำในระบบ..." onkeyup="checkWord()">
+            <div id="searchStatus" class="search-status"></div>
+        </div>
+
+        <div class="btn-row">
+            <input type="text" id="newWordInput" placeholder="➕ เพิ่มคำใหม่..." onkeypress="handleEnter(event)">
+            <button class="btn btn-success" onclick="addNewWord()" style="width: auto; min-width: 80px;">เพิ่ม</button>
+        </div>
+
+        <div id="userWordList" class="tag-list"></div>
+    </div>
+</div>
+
+<!-- Floating Quick Add Bar -->
+<div id="quickAddBar">
+    <div class="close-floater" onclick="closeFloatingBar()">×</div>
+    <div style="font-size: 0.9rem; color: var(--primary); font-weight: bold;">
+        💡 สร้างคำใหม่ (เลือกช่วงคำอัตโนมัติ)
+    </div>
+    <div class="quick-bar-content">
+        <input type="text" id="floatInput" placeholder="แตะที่ผลลัพธ์เพื่อรวมคำ..." onkeypress="handleFloatEnter(event)" autocomplete="off">
+        <button class="btn btn-success" onclick="confirmFloatingAdd()" style="width: 100px;">บันทึก</button>
+    </div>
+</div>
+
+<div id="toast">แจ้งเตือน</div>
+
+<script>
+    const defaultWordsList = ["พ่อ","แม่","ปู่","ย่า","ตา","ยาย","ลุง","ป้า","น้า","อา","กิน","เดิน","นั่ง","นอน","ไป","มา","หา","สู่","รัก","ชอบ","คน","สัตว์","สิ่ง","ของ","โรง","เรียน","งาน","การ","มี","ใจ","สวัสดี","ขอบคุณ","ครับ","ค่ะ"];
+    let defaultWordsSet = new Set(defaultWordsList);
+    let userWords = new Set();
+    let allWords = new Set();
+    let currentTokens = [];
+    
+    // NEW: Variable for Range Selection
+    let selectionStartIndex = -1; // -1 means no selection started
+
+    function init() {
+        const savedData = localStorage.getItem('thaiDictPWA_v8');
+        if (savedData) {
+            try { const arr = JSON.parse(savedData); arr.forEach(w => userWords.add(w)); } catch(e) {}
+        }
+        refreshAllWords(); renderUserTags(); setupVisualViewport();
+    }
+
+    function refreshAllWords() {
+        allWords = new Set([...defaultWordsSet, ...userWords]);
+        document.getElementById('countDisplay').innerText = `(${userWords.size} คำเพิ่มเอง)`;
+    }
+
+    function checkWord() {
+        const input = document.getElementById('searchInput');
+        const statusDiv = document.getElementById('searchStatus');
+        const word = input.value.trim();
+        if (!word) { statusDiv.innerHTML = ""; return; }
+        if (userWords.has(word)) {
+            statusDiv.innerHTML = `<span class="text-success">✅ พบในรายการของคุณ</span>`; scrollToWord(word);
+        } else if (defaultWordsSet.has(word)) {
+            statusDiv.innerHTML = `<span class="text-primary">🔹 เป็นคำพื้นฐานของระบบ</span>`;
+        } else {
+            statusDiv.innerHTML = `<span class="text-danger">❌ ไม่พบคำนี้ (เพิ่มได้เลย)</span>`;
+        }
+    }
+
+    function scrollToWord(word) {
+        const targetTag = document.querySelector(`.tag[data-word="${word}"]`);
+        if (targetTag) {
+            targetTag.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetTag.classList.add('highlight');
+            setTimeout(() => targetTag.classList.remove('highlight'), 1500);
+        }
+    }
+
+    function addNewWord() {
+        const input = document.getElementById('newWordInput');
+        const word = input.value.trim();
+        if (addWordToSet(word, true)) {
+             input.value = '';
+             if(document.getElementById('searchInput').value === word) checkWord();
+        }
+    }
+    
+    function addWordToSet(word, shouldScroll = true) {
+        if (!word) return false;
+        if (allWords.has(word)) {
+            if(shouldScroll) { alert("มีคำนี้อยู่แล้วครับ"); if(userWords.has(word)) scrollToWord(word); }
+            return false;
+        }
+        userWords.add(word);
+        saveAndRefresh();
+        if (shouldScroll) { setTimeout(() => scrollToWord(word), 100); }
+        return true;
+    }
+
+    function removeWord(word) {
+        if(confirm(`ลบคำว่า "${word}"?`)){
+            userWords.delete(word);
+            saveAndRefresh();
+            if(document.getElementById('searchInput').value === word) checkWord();
+        }
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('thaiDictPWA_v8', JSON.stringify([...userWords]));
+        refreshAllWords(); renderUserTags();
+        if(document.getElementById('inputText').value) processText();
+    }
+
+    function renderUserTags() {
+        const container = document.getElementById('userWordList');
+        container.innerHTML = '';
+        if (userWords.size === 0) {
+            container.innerHTML = '<div style="width:100%; text-align:center; color:#ccc; padding:20px;">ยังไม่มีข้อมูล</div>';
+            return;
+        }
+        const sorted = [...userWords].sort((a,b) => a.localeCompare(b, 'th'));
+        const fragment = document.createDocumentFragment();
+        sorted.forEach(word => {
+            const div = document.createElement('div');
+            div.className = 'tag'; div.setAttribute('data-word', word);
+            div.innerHTML = `${word} <span class="remove" onclick="removeWord('${word}')">×</span>`;
+            fragment.appendChild(div);
+        });
+        container.appendChild(fragment);
+    }
+
+    // --- Tokenizer with Index ---
+    function processText() {
+        const text = document.getElementById('inputText').value.trim();
+        const out = document.getElementById('output');
+        const btn = document.getElementById('dlBtn');
+        if(!text) {
+            out.innerHTML = '<span style="color:#ccc">รอข้อความ...</span>'; btn.style.display = 'none'; currentTokens = []; return;
+        }
+        currentTokens = tokenize(text);
+        let html = '';
+        // Updated Loop: Pass index (i)
+        currentTokens.forEach((t, i) => {
+            const cls = allWords.has(t) ? 'token' : 'token unknown';
+            // เพิ่ม data-index เพื่อใช้อ้างอิงเวลาเลือก Range
+            html += `<span class="${cls}" data-index="${i}" onclick="handleTokenClick(this, '${t}', ${i})">${t}</span>`;
+        });
+        out.innerHTML = html; btn.style.display = 'inline-block';
+    }
+
+    function tokenize(text) {
+        let res = []; let cursor = 0; const len = text.length;
+        while(cursor < len) {
+            let found = null; let max = 40;
+            for(let i=max; i>0; i--) {
+                if(cursor+i > len) continue;
+                let sub = text.substr(cursor, i);
+                if(allWords.has(sub)) { found = sub; break; }
+            }
+            if(found) { res.push(found); cursor += found.length; }
+            else { res.push(text[cursor]); cursor++; }
+        }
+        return res;
+    }
+
+    function saveResultText() { if(currentTokens.length) downloadFile("result.txt", currentTokens.join(" "), "text/plain"); }
+    function downloadFile(name, content, type) {
+        const a = document.createElement("a"); const blob = new Blob([content], {type: type});
+        a.href = URL.createObjectURL(blob); a.download = name; a.click();
+    }
+    function handleEnter(e) { if(e.key === 'Enter') addNewWord(); }
+    function resetDictionary() {
+        if(confirm("ล้างข้อมูลคำศัพท์ทั้งหมด?")) {
+            userWords.clear(); localStorage.removeItem('thaiDictPWA_v8');
+            refreshAllWords(); renderUserTags(); processText();
+        }
+    }
+    function exportJson() {
+        if (userWords.size === 0) { alert("ไม่มีข้อมูลให้ Backup"); return; }
+        const data = { type: "thai-tokenizer-pwa", date: new Date(), words: [...userWords] };
+        downloadFile("thai_dict_backup.json", JSON.stringify(data, null, 2), "application/json");
+    }
+    function importJson(input) {
+        const file = input.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+            try {
+                const json = JSON.parse(e.target.result);
+                const list = Array.isArray(json) ? json : (json.words || []);
+                let count = 0;
+                list.forEach(w => {
+                    if(typeof w === 'string' && w.trim() && !allWords.has(w.trim())) {
+                        userWords.add(w.trim()); count++;
+                    }
+                });
+                if(count > 0) { saveAndRefresh(); alert(`นำเข้าสำเร็จ ${count} คำ`); }
+                else { alert("ไม่พบคำใหม่"); }
+            } catch(err) { alert("ไฟล์ไม่ถูกต้อง"); }
+            input.value = '';
+        };
+        reader.readAsText(file);
+    }
+    
+    // --- NEW: Range Selection Logic ---
+
+    function handleTokenClick(element, word, index) {
+        const bar = document.getElementById('quickAddBar');
+        const input = document.getElementById('floatInput');
+        const isActive = bar.classList.contains('active');
+
+        // กรณีที่ 1: แถบยังไม่เปิด หรือ กดเพื่อเริ่มเลือกใหม่ (Reset)
+        if (!isActive || selectionStartIndex === -1) {
+            selectionStartIndex = index; // ตั้งจุดเริ่มต้น
+            input.value = word;
+            bar.classList.add('active');
+            updateRangeVisuals(index, index); // ไฮไลท์แค่ตัวเดียว
+            if(window.innerWidth > 768) input.focus();
+        } 
+        // กรณีที่ 2: แถบเปิดอยู่ และกดตัวถัดไป (Range Selection)
+        else {
+            // ถ้ากดตัวที่อยู่ *หลัง* จุดเริ่มต้น -> รวมคำตั้งแต่เริ่มถึงตัวนี้
+            if (index > selectionStartIndex) {
+                // ดึงคำทั้งหมดในช่วง
+                const rangeWords = currentTokens.slice(selectionStartIndex, index + 1);
+                input.value = rangeWords.join("");
+                updateRangeVisuals(selectionStartIndex, index);
+            }
+            // ถ้ากดตัวที่อยู่ *ก่อน* จุดเริ่มต้น -> ย้ายจุดเริ่มต้นมาที่นี่แทน
+            else if (index < selectionStartIndex) {
+                selectionStartIndex = index;
+                input.value = word;
+                updateRangeVisuals(index, index);
+            }
+            // ถ้ากดตัวเดิม -> ไม่ทำอะไร หรืออาจจะรีเซ็ตก็ได้ (ในที่นี้ปล่อยไว้)
+        }
+    }
+
+    // ฟังก์ชันช่วยไฮไลท์ช่วงคำ
+    function updateRangeVisuals(start, end) {
+        // ล้างไฮไลท์เก่าทั้งหมดก่อน
+        document.querySelectorAll('.token.selected-build').forEach(el => {
+            el.classList.remove('selected-build');
+        });
+
+        // ไฮไลท์ช่วงใหม่
+        for (let i = start; i <= end; i++) {
+            const el = document.querySelector(`.token[data-index="${i}"]`);
+            if(el) el.classList.add('selected-build');
+        }
+    }
+
+    function confirmFloatingAdd() {
+        const input = document.getElementById('floatInput');
+        const word = input.value.trim();
+        if(word && addWordToSet(word, false)) {
+            showToast(`เพิ่มคำ "${word}" แล้ว (ลำดับที่ ${userWords.size})`);
+            closeFloatingBar();
+        } else if (!word) {
+            closeFloatingBar();
+        }
+    }
+
+    function showToast(message) {
+        const t = document.getElementById("toast"); t.innerText = message; t.classList.add("show");
+        setTimeout(function(){ t.classList.remove("show"); }, 3000);
+    }
+
+    function closeFloatingBar() {
+        const bar = document.getElementById('quickAddBar');
+        bar.classList.remove('active'); bar.style.bottom = '0px';
+        document.getElementById('floatInput').blur();
+        
+        // Reset Selection Variable
+        selectionStartIndex = -1;
+        
+        document.querySelectorAll('.token.selected-build').forEach(el => {
+            el.classList.remove('selected-build');
+        });
+    }
+
+    // --- NEW: Font Size Adjuster ---
+    let currentFontSize = 1.1; // Default 1.1rem
+    function adjustFontSize(delta) {
+        // จำกัดขนาดไม่ให้เล็กหรือใหญ่เกินไป
+        const newSize = currentFontSize + (delta * 0.1);
+        if (newSize < 0.8 || newSize > 2.5) return;
+        
+        currentFontSize = newSize;
+        document.getElementById('output').style.fontSize = `${currentFontSize}rem`;
+    }
+
+    function handleFloatEnter(e) { if(e.key==='Enter') confirmFloatingAdd(); }
+
+    function setupVisualViewport() {
+        if (!window.visualViewport) return;
+        const bar = document.getElementById('quickAddBar');
+        function handleResize() {
+            if (!bar.classList.contains('active') || window.innerWidth >= 768) return;
+            const offset = window.innerHeight - window.visualViewport.height;
+            if (offset > 100) bar.style.bottom = `${offset - window.visualViewport.offsetTop}px`;
+            else bar.style.bottom = '0px';
+        }
+        window.visualViewport.addEventListener('resize', handleResize);
+        window.visualViewport.addEventListener('scroll', handleResize);
+        document.getElementById('floatInput').addEventListener('blur', () => { 
+            setTimeout(() => { bar.style.bottom = '0px'; }, 100); 
+        });
+    }
+
+    init();
+
+    </script>
+
+<script>
+  // Register Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            }, err => {
+                console.log('ServiceWorker registration failed: ', err);
+            });
+    });
+}
+</script>
+
+</body>
+</html>
