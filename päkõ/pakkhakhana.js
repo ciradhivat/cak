@@ -137,7 +137,7 @@ class PakkhakhanaEngine {
         return {
             dithi: dithiPos,
             maxDithi: maxDithi,
-            isWaxing: (b.pak.cycle % 2 === 0), 
+            isWaxing: ((b.pak.cycle+1) % 2 === 0), 
             isWanPhra: isWanPhra
         };
     }
