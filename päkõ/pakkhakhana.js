@@ -16,7 +16,8 @@ class PakkhakhanaEngine {
             vag: { currentL: 1, currentS: 1, maxL: 4, maxS: 3, walkRow: 'large', cycle: 0 },
             pak: { currentL: 1, currentS: 1, maxL: 5, maxS: 4, walkRow: 'small', cycle: 0 },
             dithi: { currentL: 1, currentS: 1, maxL: 15, maxS: 14, walkRow: 'large', cycle: 0 },
-            nextMoveIsDithi: true
+            nextMoveIsDithi: true,
+            pakAccumulator: 0
         };
         
         // กำหนดค่าเริ่มต้นตามกฎ
@@ -66,10 +67,12 @@ class PakkhakhanaEngine {
         if (!b.nextMoveIsDithi) {
             if (b.pak.walkRow === 'large') {
                 if (b.pak.currentL < b.pak.maxL) b.pak.currentL++;
-                else { b.pak.currentL = 1; b.pak.cycle++; }
+                else { b.pak.currentL = 1; b.pak.cycle++; 
+b.pakAccumulator++; }
             } else {
                 if (b.pak.currentS < b.pak.maxS) b.pak.currentS++;
-                else { b.pak.currentS = 1; b.pak.cycle++; }
+                else { b.pak.currentS = 1; b.pak.cycle++; 
+b.pakAccumulator++; }
             }
             
             this._determineDithiRowFromPak();
@@ -120,6 +123,8 @@ class PakkhakhanaEngine {
         }
     }
 
+
+
     // เดินหน้าข้ามเวลา
     fastForward(days) {
         for (let i = 0; i < days; i++) this.nextStep();
@@ -128,6 +133,11 @@ class PakkhakhanaEngine {
     // ดึงค่าสถานะปัจจุบัน
     getCurrentStatus() {
         const b = this.s;
+
+console.log("pakL =",b.pak.currentL);
+console.log("pakS =",b.pak.currentS);
+console.log("pakAccumulator =",b.pakAccumulator);
+
         const dithiPos = (b.dithi.walkRow === 'large') ? b.dithi.currentL : b.dithi.currentS;
         const maxDithi = (b.dithi.walkRow === 'large') ? b.dithi.maxL : b.dithi.maxS;
         
@@ -137,9 +147,11 @@ class PakkhakhanaEngine {
         return {
             dithi: dithiPos,
             maxDithi: maxDithi,
-            isWaxing: (b.pak.cycle % 2 === 0), 
+            isWaxing: ((b.pakAccumulator+1) % 2 === 0), 
             isWanPhra: isWanPhra
         };
+
+
     }
 
     // Clone ตัวเอง (สำหรับ Simulation)
