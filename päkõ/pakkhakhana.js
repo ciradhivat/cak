@@ -147,7 +147,7 @@ console.log("pakAccumulator =",b.pakAccumulator);
         return {
             dithi: dithiPos,
             maxDithi: maxDithi,
-            isWaxing: ((b.pakAccumulator+1) % 2 === 0), 
+            isWaxing: ((b.pakAccumulator) % 2 === 0), 
             isWanPhra: isWanPhra
         };
 
