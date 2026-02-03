@@ -66,11 +66,13 @@ class PakkhakhanaEngine {
 
         if (!b.nextMoveIsDithi) {
             if (b.pak.walkRow === 'large') {
-                if (b.pak.currentL < b.pak.maxL) b.pak.currentL++;
+                if (b.pak.currentL < b.pak.maxL) {b.pak.currentL++;
+b.pakAccumulator++;}
                 else { b.pak.currentL = 1; b.pak.cycle++; 
 b.pakAccumulator++; }
             } else {
-                if (b.pak.currentS < b.pak.maxS) b.pak.currentS++;
+                if (b.pak.currentS < b.pak.maxS) {b.pak.currentS++;
+b.pakAccumulator++;}
                 else { b.pak.currentS = 1; b.pak.cycle++; 
 b.pakAccumulator++; }
             }
@@ -147,7 +149,7 @@ console.log("pakAccumulator =",b.pakAccumulator);
         return {
             dithi: dithiPos,
             maxDithi: maxDithi,
-            isWaxing: ((b.pakAccumulator) % 2 === 0), 
+            isWaxing: ((b.pakAccumulator+1) % 2 === 0), 
             isWanPhra: isWanPhra
         };
 
