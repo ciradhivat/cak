@@ -1,30 +1,25 @@
-﻿<!DOCTYPE html>
+<!-- START OF FILE pageNumber_align_options.html -->
+
+<!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>การจัดรูปแบบหนังสือ</title>
     
-    <!-- PWA Manifest Link -->
     <link rel="manifest" href="manifest.json">
-    
-    <!-- iOS Support -->
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta name="apple-mobile-web-app-status-bar" content="#1e293b">
     <meta name="theme-color" content="#1e293b">
 
-    <!-- Google Fonts: Sarabun -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* --- CSS VARIABLES --- */
         :root {
-            /* Dark Mode (Default) */
             --bg-body: #18181b;
             --bg-nav: #1e293b;
             --bg-panel: #27272a;
@@ -38,14 +33,12 @@
             --input-hover: rgba(255, 255, 255, 0.1);
             --input-border: #71717a;
             
-            /* Table Colors (Dark) */
             --table-header-bg: #52525b;
             --table-row-even: #27272a;
             --table-row-odd: #3f3f46;
             --table-border: #52525b;
         }
 
-        /* Light Mode */
         body.theme-light {
             --bg-body: #cbd5e1;
             --bg-nav: #2563eb;
@@ -60,19 +53,16 @@
             --input-hover: rgba(255, 255, 200, 0.4);
             --input-border: #cbd5e1;
             
-            /* Table Colors (Light) */
             --table-header-bg: #dbeafe;
             --table-row-even: #ffffff;
             --table-row-odd: #f8fafc;
             --table-border: #e2e8f0;
         }
 
-        /* --- BASIC SETUP --- */
         html, body { height: 100%; margin: 0; padding: 0; }
         body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-body) !important; overflow-x: hidden; transition: background-color 0.3s ease; }
         nav { background-color: var(--bg-nav) !important; transition: background-color 0.3s ease; }
 
-        /* --- CONTROL PANEL --- */
         .app-controls {
             position: fixed; bottom: 20px; right: 20px; z-index: 50;
             border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.3);
@@ -99,7 +89,6 @@
             background-color: #3f3f46; color: white; border-color: #52525b;
         }
 
-        /* --- PAPER Styles --- */
         .a4-paper {
             width: 210mm; min-height: 297mm;
             background-color: var(--bg-paper) !important; color: var(--text-paper) !important;
@@ -108,7 +97,6 @@
             position: relative; box-sizing: border-box;
             transition: background-color 0.3s ease, color 0.3s ease;
         }
-        /* Visual Feedback for Drag & Drop */
         .a4-paper.drag-over {
             border: 3px dashed #3b82f6; 
             background-color: rgba(59, 130, 246, 0.1) !important;
@@ -116,7 +104,6 @@
 
         .default-logo-path { fill: var(--logo-fill) !important; transition: fill 0.3s ease; }
 
-        /* --- TYPOGRAPHY --- */
         .font-header-std { font-size: 29pt !important; font-weight: bold; line-height: 1.2; }
         .font-topic-std { font-size: 20pt !important; font-weight: bold; }
         .font-body-std, .font-body-std * { font-size: 16pt !important; font-weight: normal; }
@@ -133,38 +120,58 @@
             border-bottom: 1px dashed var(--input-border); background-color: var(--input-hover);
         }
 
-        /* --- UTILS --- */
         .form-row { display: flex; align-items: baseline; margin-bottom: 8px; }
         .form-label { white-space: nowrap; margin-right: 10px; flex-shrink: 0; }
         .form-value { flex-grow: 1; min-width: 0; }
-        .tab-indent { text-indent: 2.5cm; margin-bottom: 10px; display: block; }
-        .tab-indent [contenteditable="true"] { display: inline; text-indent: 0; }
         
-        /* --- SIGNATURE BLOCK (Centered Start + New Spacing 80px) --- */
+        /* --- ALIGNMENT CLASSES --- */
+        /* Default base class */
+        .tab-indent { 
+            text-indent: 2.5cm; 
+            margin-bottom: 10px; 
+            display: block;
+        }
+        .tab-indent [contenteditable="true"] { 
+            display: inline; 
+            text-indent: 0; 
+        }
+
+        /* Mode: Left Align (Natural spacing) */
+        .align-left .tab-indent, 
+        .align-left .tab-indent [contenteditable="true"] {
+            text-align: left;
+            word-spacing: normal;
+            letter-spacing: normal;
+        }
+
+        /* Mode: Justify (Formal, full width) */
+        .align-justify .tab-indent, 
+        .align-justify .tab-indent [contenteditable="true"] {
+            text-align: justify;
+            text-justify: inter-character;
+        }
+        /* -------------------------- */
+        
         .signature-block { 
             margin-top: 50px; 
             width: 100%;    
-            padding-left: 50%; /* Center Start */
+            padding-left: 50%;
             box-sizing: border-box;
             text-align: left; 
             page-break-inside: avoid; 
         }
         
-        /* Layout logic for Mode */
         .mode-memo .header-external-only { display: none; }
         .mode-memo .header-memo-only { display: block; }
         .mode-external .header-memo-only { display: none; }
         .mode-external .header-external-only { display: block; }
         .field-hidden { display: none !important; }
         
-        /* Logo Logic */
         .logo-section { position: relative; margin-bottom: 20px; min-height: 1.5cm; }
         
-        /* Memo Mode Logo */
         .mode-memo .logo-container { position: absolute !important; left: 0; top: 0; height: 1.5cm !important; width: 1.5cm !important; margin: 0 !important; }
         .mode-memo h1.header-memo-only { width: 100%; text-align: center; margin-top: 0; line-height: 1.5cm; }
         
-        /* External Mode Logo */
         .mode-external .logo-section { 
             display: grid;
             grid-template-columns: 1fr auto 1fr;
@@ -174,31 +181,19 @@
         }
         .mode-external .logo-container { width: 3cm; height: 3cm; margin: 0 auto; }
         
-        /* --- External Date (Centered Start) --- */
         .external-date-container {
             margin-top: 1.5rem;
             margin-bottom: 2rem;
             width: 100%;
-            padding-left: 50%; /* Center Start */
+            padding-left: 50%;
             box-sizing: border-box;
             text-align: left;
         }
-        
-        .page-number-display {
-    position: absolute;
-    top: 10px;        /* ระยะห่างจากขอบบน */
-    left: 0;           /* เริ่มจากซ้ายสุด */
-    width: 100%;       /* กว้างเต็มแผ่น */
-    text-align: center;/* จัดตัวหนังสือไว้ตรงกลาง */
-    pointer-events: none; /* (แนะนำเพิ่ม) เพื่อให้คลิกทะลุไปโดนโลโก้หรือเนื้อหาข้างใต้ได้ */
-}
-
 
         .logo-hint { margin-top: 5px; font-size: 12px; color: #94a3b8; text-decoration: underline; cursor: pointer; text-align: center; }
         .toggle-btn { cursor: pointer; padding: 4px; border-radius: 50%; transition: background 0.2s; }
         .toggle-btn:hover { background: rgba(0,0,0,0.1); }
 
-        /* --- REGISTER TABLE STYLES --- */
         .reg-table-container {
             max-height: 120px;
             overflow-y: auto;
@@ -232,7 +227,6 @@
         .delete-btn { color: #ef4444; cursor: pointer; font-weight: bold; text-align: center; }
         .delete-btn:hover { color: #dc2626; }
 
-        /* --- RESPONSIVE FIX (Method A: Vertical Header on Mobile) --- */
         @media screen and (max-width: 768px) {
             .a4-paper { width: 100%; margin: 0; padding: 15mm; min-height: 100vh; }
             .signature-block { padding-left: 0; text-align: center; margin-top: 30px; }
@@ -240,7 +234,6 @@
             .app-controls.collapsed { bottom: 15px; right: 15px; width: 50px; height: 50px; }
             .app-controls { width: 90%; max-width: 320px; }
 
-            /* Fix Header Overflow */
             .mode-external .logo-section {
                 display: flex;
                 flex-direction: column;
@@ -249,26 +242,43 @@
             }
             .header-external-only {
                 width: 100%;
-                text-align: center; /* Or left if preferred on mobile */
+                text-align: center;
             }
             .header-external-only > div {
-                 text-align: center !important; /* Force center on mobile for aesthetics */
-            }
-            
-            /* Adjust Page Number on mobile */
-            .page-number-display {
-                top: 10px; right: 10px;
+                 text-align: center !important;
             }
         }
 
+        @page {
+            margin: 2.5cm 2cm 2cm 3cm;
+        }
+
         @media print {
-            @page { margin: 2.5cm 2cm 2cm 3cm; }
             body { background: white !important; width: 100%; margin: 0; }
-            .a4-paper { width: 100%; margin: 0 !important; padding: 0 !important; box-shadow: none; min-height: auto; background-color: white !important; color: black !important; }
+            .a4-paper { 
+                width: 100%; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                box-shadow: none; 
+                min-height: auto; 
+                background-color: white !important; 
+                color: black !important;
+                page-break-after: always;
+            }
             .default-logo-path { fill: #1e293b !important; } 
             .app-controls, nav, .no-print, .logo-hint { display: none !important; }
             [contenteditable="true"] { border-bottom: none !important; background-color: transparent !important; }
-            .a4-paper.drag-over { border: none !important; } 
+            .a4-paper.drag-over { border: none !important; }
+            
+            .page-footer {
+                position: fixed;
+                bottom: 1cm;
+                left: 0;
+                right: 0;
+                text-align: center;
+                font-size: 14pt;
+                font-family: 'Sarabun', sans-serif;
+            }
         }
     </style>
 </head>
@@ -288,16 +298,9 @@
     </nav>
 
     <div class="flex justify-center w-full">
-        <!-- Removed Title attribute to clean up hover text -->
         <div class="a4-paper" id="document-content">
 
-            
-            <!-- Page Number Display 
-            <div id="page-num-display" class="page-number-display font-page-num" contenteditable="true">หน้า ๑/๑</div> -->
-
-            <!-- Header (Logo & Fields aligned to Top) -->
             <div class="logo-section relative">
-                <!-- Left: Issue Number (External Mode Only) -->
                 <div class="header-external-only text-left">
                     <div class="form-row mb-0">
                         <span class="font-topic-std mr-2">ที่</span>
@@ -305,7 +308,6 @@
                     </div>
                 </div>
 
-                <!-- Center: Logo -->
                 <div class="logo-container cursor-pointer transition-transform hover:scale-105 relative" onclick="document.getElementById('logoInput').click()" title="คลิกเพื่อเปลี่ยนรูป">
                     <img id="logo-img" src="" alt="Logo" class="w-full h-full object-contain" style="display: none;">
                     <div id="default-svg-container" class="w-full h-full">
@@ -317,8 +319,6 @@
                     </div>
                 </div>
 
-                <!-- Right: Organization Address (External Mode Only) -->
-                <!-- Adjusted to text-left inside the box -->
                 <div class="header-external-only text-left">
                     <div id="input-org-ext" contenteditable="true" class="font-value-std whitespace-pre-wrap leading-tight text-left">บ้านพักส่วนตัว<br>เลขที่ ๙๙๙ ถ.มิตรภาพ อ.เมือง<br>จ.ขอนแก่น</div>
                 </div>
@@ -327,7 +327,6 @@
                 <div class="logo-hint no-print col-span-full" onclick="document.getElementById('logoInput').click()">เปลี่ยนโลโก้</div>
             </div>
 
-            <!-- Fields for Memo (Internal) -->
             <div class="header-memo-only space-y-1">
                 <div class="form-row">
                     <span id="org-header-label" contenteditable="true" class="form-label font-topic-std min-w-[2.5cm]">ส่วนราชการ</span>
@@ -345,14 +344,12 @@
                 </div>
             </div>
 
-            <!-- Fields for External (Remaining fields) -->
             <div class="header-external-only">
                 <div class="external-date-container">
                     <span contenteditable="true" class="font-value-std" id="input-date-ext">๑๗ ธันวาคม ๒๕๖๘</span>
                 </div>
             </div>
 
-            <!-- Common Header (Subject, To, Ref, Enclosure) -->
             <div class="common-header mt-2">
                 <div class="form-row">
                     <span class="form-label font-topic-std min-w-[1.5cm]">เรื่อง</span>
@@ -375,29 +372,29 @@
 
             <hr class="header-memo-only border-t-1 border-black my-4 opacity-100">
 
-            <div id="memo-body" class="font-body-std leading-relaxed text-justify space-y-4 min-h-[200px] mt-4">
+            <!-- Body Container with dynamic class for alignment -->
+            <div id="memo-body" class="font-body-std leading-relaxed space-y-4 min-h-[200px] mt-4 align-left">
                 <p class="tab-indent text-gray-400 italic no-print select-none">
                    (เนื้อหาหนังสือ... คลิกเพื่อพิมพ์ หรือลากไฟล์ .txt มาวาง)
                 </p>
             </div>
 
-            <!-- Signature Block -->
             <div class="signature-block font-value-std">
                 <div id="closing-phrase" class="closing-phrase field-hidden">
                     <span contenteditable="true" id="input-closing">ขอแสดงความนับถือ</span>
                 </div>
 
-                <!-- Margin increased to 80px (~3-4 lines) -->
-                <div class="" style="margin-top: 80px; margin-bottom: 12px;">(ลงชื่อ)...........................................................</div>
+                <div class="" style="margin-top: 80px; margin-bottom: 12px;">.                                                         .</div>
                 
                 <div class="mb-2 font-bold">( <span contenteditable="true" id="input-sign-name">นายจิราธิวัฒน์ พิมพ์สุจีรวีโรจน์</span> )</div>
                 <div class="mb-2"><span contenteditable="true" id="input-sign-role">ผู้จัดการ / กรรมการผู้จัดการ</span></div>
             </div>
             <div class="clear-both"></div>
+            
+            <div class="page-footer no-print"></div>
         </div>
     </div>
 
-    <!-- Hidden Inputs -->
     <input type="file" id="txtFileInput" accept=".txt" class="hidden">
     <input type="file" id="logoInput" accept="image/png, image/jpeg" class="hidden">
     <input type="file" id="memoFileInput" accept=".memo" class="hidden">
@@ -405,7 +402,6 @@
     <input type="file" id="csvAddrInput" accept=".csv" class="hidden">
     <input type="file" id="csvOrgInput" accept=".csv" class="hidden">
 
-    <!-- Control Panel -->
     <div class="app-controls" id="controlPanel" onclick="expandIfCollapsed()">
         <div class="flex justify-between items-center p-3 border-b border-gray-200 controls-content">
             <div class="font-bold controls-header-text">ตั้งค่าเอกสาร</div>
@@ -420,7 +416,6 @@
 
         <div class="p-4 controls-content overflow-y-auto max-h-[70vh] space-y-4">
             
-            <!-- NEW: Import Content (Orange) -->
             <div class="control-group-box border-orange-500/30">
                 <label class="block text-sm font-bold mb-2 control-label flex justify-between">
                     <span style="color:#f97316">จัดการเนื้อหา</span>
@@ -432,12 +427,10 @@
                 <div class="text-xs text-gray-500 text-center">(หรือลากไฟล์ .txt มาวางบนกระดาษ)</div>
             </div>
 
-            <!-- 1. Running Number System -->
             <div class="control-group-box border-yellow-500/30">
                 <label class="block text-sm font-bold mb-2 control-label flex justify-between">
                     <span style="color:#eab308">ทะเบียนคุมเลข (Auto Run)</span>
                 </label>
-                <!-- ... Inputs ... -->
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <div>
                         <span class="text-xs text-gray-500 block mb-1">คำนำหน้า</span>
@@ -448,14 +441,13 @@
                         <input type="number" id="reg-year" class="w-full p-1 rounded border text-sm" value="2568">
                     </div>
                 </div>
-                <!-- Digit Type Radio -->
                 <div class="mb-2 flex items-center gap-4">
                     <label class="inline-flex items-center text-xs cursor-pointer control-label">
-                        <input type="radio" name="digitType" value="thai" checked class="form-radio text-yellow-600" onchange="updatePageNumberDisplay()">
+                        <input type="radio" name="digitType" value="thai" checked class="form-radio text-yellow-600" onchange="updatePageNumberStyle()">
                         <span class="ml-1">เลขไทย</span>
                     </label>
                     <label class="inline-flex items-center text-xs cursor-pointer control-label">
-                        <input type="radio" name="digitType" value="arabic" class="form-radio text-yellow-600" onchange="updatePageNumberDisplay()">
+                        <input type="radio" name="digitType" value="arabic" class="form-radio text-yellow-600" onchange="updatePageNumberStyle()">
                         <span class="ml-1">เลขอารบิก</span>
                     </label>
                 </div>
@@ -474,8 +466,7 @@
                 </div>
             </div>
 
-            <!-- 2. Address Book (Green) -->
-             <div class="control-group-box border-green-500/30">
+            <div class="control-group-box border-green-500/30">
                 <label class="block text-sm font-bold mb-2 control-label flex justify-between">
                     <span style="color:#22c55e">รายชื่อผู้รับ</span>
                 </label>
@@ -490,7 +481,6 @@
                 </div>
             </div>
 
-            <!-- 3. Organization Book (Indigo) -->
             <div class="control-group-box border-indigo-500/30">
                 <label class="block text-sm font-bold mb-2 control-label flex justify-between">
                     <span style="color:#6366f1">ที่อยู่หน่วยงาน</span>
@@ -522,6 +512,22 @@
                 </select>
             </div>
             
+            <div class="control-group">
+                <label class="block text-sm text-gray-600 mb-1 control-label">การจัดวางข้อความ:</label>
+                <select id="alignmentSelect" onchange="updateAlignment()" class="w-full p-2 border rounded text-sm outline-none">
+                    <option value="left" selected>ชิดซ้าย (ธรรมชาติ/ช่องไฟเท่ากัน)</option>
+                    <option value="justify">กระจายเต็มขอบ (ทางการ)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label class="block text-sm text-gray-600 mb-1 control-label">รูปแบบเลขหน้า:</label>
+                <select id="pageNumberStyleSelect" onchange="updatePageNumberStyle()" class="w-full p-2 border rounded text-sm outline-none">
+                    <option value="thai">เลขไทย (หน้า ๑)</option>
+                    <option value="arabic">เลขอารบิก (หน้า 1)</option>
+                </select>
+            </div>
+            
              <div class="control-group">
                 <label class="block text-sm text-gray-600 mb-2 control-label">เพิ่ม/ลบ หัวข้อ:</label>
                 <div class="flex flex-col gap-2">
@@ -547,32 +553,63 @@
     </div>
 
     <script>
-        // --- Registry System ---
         const REG_KEY = 'memo_registry_v1';
+        const PAGE_NUM_STYLE_KEY = 'memo_page_num_style';
+        
         window.addEventListener('load', () => {
             renderRegisterTable();
             document.getElementById('reg-year').value = new Date().getFullYear() + 543;
             renderAddressBook(); 
             renderOrgBook();
-            updatePageNumberDisplay(); // Init page num
+            loadPageNumberStyle();
         });
 
         function getRegistry() { const data = localStorage.getItem(REG_KEY); return data ? JSON.parse(data) : []; }
         function saveRegistry(list) { localStorage.setItem(REG_KEY, JSON.stringify(list)); renderRegisterTable(); }
         function toThaiDigits(numStr) { const thaiDigits = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙']; return numStr.toString().replace(/[0-9]/g, w => thaiDigits[+w]); }
         function thaiToArabic(str) { const thaiDigits = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙']; let res = str; thaiDigits.forEach((td, i) => { res = res.replaceAll(td, i.toString()); }); return res; }
-        
-        // --- Logic: Update Page Number Display based on setting ---
-        function updatePageNumberDisplay() {
-            const digitType = document.querySelector('input[name="digitType"]:checked').value;
-            const displayEl = document.getElementById('page-num-display');
+
+        function loadPageNumberStyle() {
+            const savedStyle = localStorage.getItem(PAGE_NUM_STYLE_KEY) || 'thai';
+            document.getElementById('pageNumberStyleSelect').value = savedStyle;
+            updatePageNumberStyle();
+        }
+
+        function updatePageNumberStyle() {
+            const style = document.getElementById('pageNumberStyleSelect').value;
+            localStorage.setItem(PAGE_NUM_STYLE_KEY, style);
             
-            // Default 1/1 for now
-            if (digitType === 'thai') {
-                displayEl.innerText = 'หน้า ๑/๑';
-            } else {
-                displayEl.innerText = 'หน้า 1/1';
+            // Update the CSS for print
+            let styleEl = document.getElementById('dynamic-page-style');
+            if (!styleEl) {
+                styleEl = document.createElement('style');
+                styleEl.id = 'dynamic-page-style';
+                document.head.appendChild(styleEl);
             }
+            
+            if (style === 'thai') {
+                styleEl.textContent = `
+                    @media print {
+                        @page { @bottom-center { content: "หน้า " counter(page, thai) "/" counter(pages,thai); } }
+                        .page-footer::after { content: "หน้า " counter(page, thai) "/" counter(pages,thai); }
+                    }
+                `;
+            } else {
+                styleEl.textContent = `
+                    @media print {
+                        @page { @bottom-center { content: "หน้า " counter(page, decimal) "/" counter(pages,decimal); } }
+                        .page-footer::after { content: "หน้า " counter(page, decimal) "/" counter(pages,decimal); }
+                    }
+                `;
+            }
+        }
+        
+        function updateAlignment() {
+            const mode = document.getElementById('alignmentSelect').value;
+            const body = document.getElementById('memo-body');
+            // Remove existing alignment classes and add new one
+            body.classList.remove('align-left', 'align-justify');
+            body.classList.add('align-' + mode);
         }
 
         function generateNextNumber() {
@@ -593,10 +630,8 @@
             const newItem = { id: Date.now(), prefix: prefix, year: year, runNo: nextNo, fullId: displayId, subject: subject || "(ไม่มีหัวข้อ)", date: today };
             list.unshift(newItem); saveRegistry(list);
             document.querySelector('.reg-table-container').scrollTop = 0;
-            updatePageNumberDisplay(); // Sync page number style
         }
 
-        // ... [Registry/Address/Org functions same as before] ...
         function renderRegisterTable() {
             const list = getRegistry(); const tbody = document.getElementById('registry-list'); tbody.innerHTML = '';
             list.forEach(item => { const tr = document.createElement('tr'); tr.innerHTML = `<td class="truncate max-w-[80px]" title="${item.fullId}">${item.fullId}</td><td class="truncate max-w-[120px]" title="${item.subject}">${item.subject}</td>`; tbody.appendChild(tr); });
@@ -605,7 +640,6 @@
         document.getElementById('csvRegInput').addEventListener('change', function(e) { const file=e.target.files[0]; if(!file)return; const r=new FileReader(); r.onload=function(e){importRegistryFromCSV(e.target.result);}; r.readAsText(file); this.value=''; });
         function importRegistryFromCSV(csv) { try { const lines=csv.split(/\r?\n/).filter(l=>l.trim()!==''); const nL=[]; let st=0; if(lines[0].includes('ที่')&&lines[0].includes('เรื่อง'))st=1; for(let i=st;i<lines.length;i++){ const c=lines[i].split(','); if(c.length<2)continue; const fId=c[0].trim(); const subj=c[1].trim(); const dt=c[2]?c[2].trim():''; const arId=thaiToArabic(fId); let p=""; let rNo=0; let yr=new Date().getFullYear()+543; const m=arId.match(/^(.*?)(\d+)\/(\d+)$/); if(m){p=m[1]; rNo=parseInt(m[2],10); yr=m[3];} nL.push({id:Date.now()+i, prefix:p, year:yr, runNo:rNo, fullId:fId, subject:subj, date:dt}); } if(nL.length>0&&confirm(`พบ ${nL.length} รายการ นำเข้า?`)){saveRegistry(nL); if(nL[0]){document.getElementById('reg-prefix').value=nL[0].prefix||''; document.getElementById('reg-year').value=nL[0].year||'';}} }catch(e){alert('CSV Error');} }
         
-        // Address/Org Book
         const ADDRESS_KEY='memo_addr'; const ORG_KEY='memo_org';
         function getAddressBook(){const d=localStorage.getItem(ADDRESS_KEY); return d?JSON.parse(d):[];} function saveAddressBook(l){localStorage.setItem(ADDRESS_KEY,JSON.stringify(l));renderAddressBook();}
         function getOrgBook(){const d=localStorage.getItem(ORG_KEY); return d?JSON.parse(d):[];} function saveOrgBook(l){localStorage.setItem(ORG_KEY,JSON.stringify(l));renderOrgBook();}
@@ -631,7 +665,6 @@
         function importSimpleCSV(txt,getFn,saveFn){try{const lines=txt.split(/\r?\n/).filter(l=>l.trim()!==''); const l=getFn(); let st=0; if(lines[0].includes('รายชื่อ')||lines[0].includes('Name')||lines[0].includes('หน่วยงาน'))st=1; for(let i=st;i<lines.length;i++){const n=lines[i].split(',')[0].trim(); if(n)l.push({id:Date.now()+i,name:n});} l.sort((a,b)=>a.name.localeCompare(b.name,'th')); saveFn(l); alert('นำเข้าเรียบร้อย');}catch(e){alert('Error');}}
         function downloadCSV(c,f){const b=new Blob([c],{type:'text/csv;charset=utf-8;'}); const u=URL.createObjectURL(b); const l=document.createElement("a"); l.href=u; l.download=f; document.body.appendChild(l); l.click(); document.body.removeChild(l);}
 
-        // --- Theme & UI Logic ---
         function toggleTheme() {
             const body = document.body; const iconSun = document.getElementById('icon-sun'); const iconMoon = document.getElementById('icon-moon');
             body.classList.toggle('theme-light');
@@ -651,7 +684,6 @@
             if (el.classList.contains('field-hidden')) { el.classList.remove('field-hidden'); if(chk) chk.checked = true; } else { el.classList.add('field-hidden'); if(chk) chk.checked = false; }
         }
 
-        // --- File Handling ---
         document.getElementById('logoInput').addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader(); reader.onload = function(e) { document.getElementById('default-svg-container').style.display = 'none'; const imgEl = document.getElementById('logo-img'); imgEl.src = e.target.result; imgEl.style.display = 'block'; }; reader.readAsDataURL(file); this.value = '';
@@ -660,12 +692,23 @@
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader(); reader.onload = function(e) { formatAndInsertText(e.target.result); }; reader.readAsText(file); this.value = '';
         });
+        
         function formatAndInsertText(rawText) {
             const bodyContainer = document.getElementById('memo-body'); bodyContainer.innerHTML = ''; 
             const paragraphs = rawText.split(/\r?\n/).filter(line => line.trim() !== '');
             if (paragraphs.length === 0) { alert('ไม่พบข้อความในไฟล์'); return; }
-            paragraphs.forEach(text => { const p = document.createElement('p'); p.className = 'tab-indent'; const span = document.createElement('span'); span.setAttribute('contenteditable', 'true'); span.innerText = text.trim(); p.appendChild(span); bodyContainer.appendChild(p); });
+            paragraphs.forEach(text => { 
+                const p = document.createElement('p'); 
+                p.className = 'tab-indent'; 
+                const span = document.createElement('span'); 
+                span.setAttribute('contenteditable', 'true'); 
+                const cleanedText = text.trim().replace(/\s+/g, ' ');
+                span.innerText = cleanedText; 
+                p.appendChild(span); 
+                bodyContainer.appendChild(p); 
+            });
         }
+        
         document.getElementById('memo-body').addEventListener('click', function(e) {
             if (e.target.id === 'memo-body' && this.innerText.trim().length < 5) {
                 if(this.querySelector('.no-print')) this.innerHTML = '';
@@ -674,11 +717,15 @@
         });
         document.querySelectorAll('[contenteditable]').forEach(el => { el.addEventListener('paste', function(e) { e.preventDefault(); var text = (e.originalEvent || e).clipboardData.getData('text/plain'); document.execCommand("insertHTML", false, text); }); });
 
-        // --- Save/Open .memo ---
         function saveMemo() {
             let subject = document.getElementById('input-subject').innerText.trim(); let safeSubject = subject.replace(/[\/\\?%*:|"<>]/g, '_'); if (!safeSubject || safeSubject.length === 0) safeSubject = "บันทึกข้อความ"; const fileName = safeSubject + ".memo";
             const data = {
-                settings: { docMode: document.getElementById('docTypeSelect').value, toggles: { ref: document.getElementById('chk-ref').checked, attach: document.getElementById('chk-attach').checked, closing: document.getElementById('chk-closing').checked } },
+                settings: { 
+                    docMode: document.getElementById('docTypeSelect').value, 
+                    pageNumberStyle: document.getElementById('pageNumberStyleSelect').value,
+                    alignment: document.getElementById('alignmentSelect').value, // Save alignment setting
+                    toggles: { ref: document.getElementById('chk-ref').checked, attach: document.getElementById('chk-attach').checked, closing: document.getElementById('chk-closing').checked } 
+                },
                 content: { orgLabelText: document.getElementById('org-header-label').innerText, org: document.getElementById('input-org').innerText, at: document.getElementById('input-at').innerText, date: document.getElementById('input-date').innerText, atExt: document.getElementById('input-at-ext').innerText, orgExt: document.getElementById('input-org-ext').innerText, dateExt: document.getElementById('input-date-ext').innerText, subject: document.getElementById('input-subject').innerText, to: document.getElementById('input-to').innerText, ref: document.getElementById('input-ref').innerText, attach: document.getElementById('input-attach').innerText, bodyHTML: document.getElementById('memo-body').innerHTML, closing: document.getElementById('input-closing').innerText, signName: document.getElementById('input-sign-name').innerText, signRole: document.getElementById('input-sign-role').innerText },
                 logo: { isVisible: document.getElementById('logo-img').style.display !== 'none', src: document.getElementById('logo-img').src }
             };
@@ -692,11 +739,22 @@
             changeDocMode(data.settings.docMode); const chkRef = document.getElementById('chk-ref'); const chkAttach = document.getElementById('chk-attach'); const chkClosing = document.getElementById('chk-closing');
             if(chkRef.checked !== data.settings.toggles.ref) toggleField('field-ref'); if(chkAttach.checked !== data.settings.toggles.attach) toggleField('field-attach');
             if (data.settings.toggles.closing) { document.getElementById('closing-phrase').classList.remove('field-hidden'); chkClosing.checked = true; } else { document.getElementById('closing-phrase').classList.add('field-hidden'); chkClosing.checked = false; }
+            if (data.settings.pageNumberStyle) { document.getElementById('pageNumberStyleSelect').value = data.settings.pageNumberStyle; updatePageNumberStyle(); }
+            
+            // Load alignment setting
+            if (data.settings.alignment) { 
+                document.getElementById('alignmentSelect').value = data.settings.alignment; 
+                updateAlignment();
+            } else {
+                // Default fallback for old files
+                document.getElementById('alignmentSelect').value = 'justify'; 
+                updateAlignment();
+            }
+
             document.getElementById('org-header-label').innerText = data.content.orgLabelText || 'ส่วนราชการ'; document.getElementById('input-org').innerText = data.content.org; document.getElementById('input-at').innerText = data.content.at; document.getElementById('input-date').innerText = data.content.date; document.getElementById('input-at-ext').innerText = data.content.atExt; document.getElementById('input-org-ext').innerText = data.content.orgExt; document.getElementById('input-date-ext').innerText = data.content.dateExt; document.getElementById('input-subject').innerText = data.content.subject; document.getElementById('input-to').innerText = data.content.to; document.getElementById('input-ref').innerText = data.content.ref; document.getElementById('input-attach').innerText = data.content.attach; document.getElementById('memo-body').innerHTML = data.content.bodyHTML; document.getElementById('input-closing').innerText = data.content.closing; document.getElementById('input-sign-name').innerText = data.content.signName; document.getElementById('input-sign-role').innerText = data.content.signRole;
             if (data.logo.isVisible && data.logo.src) { document.getElementById('default-svg-container').style.display = 'none'; const imgEl = document.getElementById('logo-img'); imgEl.src = data.logo.src; imgEl.style.display = 'block'; } else { document.getElementById('default-svg-container').style.display = 'block'; document.getElementById('logo-img').style.display = 'none'; }
         }
 
-        // --- Drag & Drop Implementation ---
         const paper = document.getElementById('document-content');
         paper.addEventListener('dragover', (e) => { e.preventDefault(); paper.classList.add('drag-over'); });
         paper.addEventListener('dragleave', (e) => { e.preventDefault(); paper.classList.remove('drag-over'); });
@@ -709,10 +767,7 @@
                 } else { alert('รับเฉพาะไฟล์ .txt'); }
             }
         });
-        
-        // Removed double click event listener to avoid conflict
 
-        // --- PWA Service Worker Registration ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -723,4 +778,3 @@
     </script>
 </body>
 </html>
-
